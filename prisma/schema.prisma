@@ -55,15 +55,16 @@ model BlogPost {
 }
 
 model Comment {
-  id         String   @id @default(cuid())
-  content    String
-  authorId   String
-  author     User     @relation(fields: [authorId], references: [id])
-  blogPostId String
-  blogPost   BlogPost @relation(fields: [blogPostId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  Report     Report[]
+  id               String   @id @default(cuid())
+  content          String
+  authorId         String
+  author           User     @relation(fields: [authorId], references: [id])
+  blogPostId       String
+  blogPost         BlogPost @relation(fields: [blogPostId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  Report           Report[]
+  nextComment      Comment[]
 }
 
 model Report {
