@@ -64,7 +64,7 @@ model Comment {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   Report           Report[]
-  followingComment Comment[]
+  nextComment Comment[]
 }
 
 model Report {
