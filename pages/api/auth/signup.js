@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from 'bcryptjs'
-import { generateToken } from "../../../lib/auth";
+import { generateAccessToken, generateRefreshToken } from "../../../lib/auth";
 
 const prisma = new PrismaClient()
 
@@ -36,19 +36,33 @@ export default async function handler(req, res) {
             },
         });
 
-        const token = generateToken(newUser)
+        const accessToken = generateAccessToken(newUser.id);
+        const refreshToken = generateRefreshToken(newUser.id);
+
+        await prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: newUser.id,
+            },
+        });
+
+        res.setHeader('Set-Cookie', `refreshToken=${refreshToken}; HttpOnly; Path=/; Max-Age=604800; SameSite=Strict`);
+
 
         res.status(201).json({
-            message: 'Signed up successfully',
-            token
-        })
+            message: 'User created successfully',
+            user: {
+                id: newUser.id,
+                email: newUser.email,
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+            },
+            accessToken,
+        });
+
     }
     catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' })
     }
-    finally {
-        await prisma.$disconnect()
-    }
-
 }

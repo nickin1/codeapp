@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from 'bcrypt'
-import { generateToken } from "../../../lib/auth";
+import { generateRefreshToken, generateAccessToken } from "../../../lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -31,12 +31,30 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        const token = generateToken(user);
+        const accessToken = generateAccessToken(user.id)
+        const refreshToken = generateRefreshToken(user.id)
+
+
+        await prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: user.id,
+            },
+        });
+
+        res.setHeader('Set-Cookie', `refreshToken=${refreshToken}; HttpOnly; Path=/; Max-Age=604800; SameSite=Strict`)
+
 
         res.status(200).json({
             message: 'Logged in successfully',
-            token
-        })
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+            },
+            accessToken,
+        });
 
     } catch (error) {
         console.error('/api/auth/login error: ', error);
