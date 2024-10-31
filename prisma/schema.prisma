@@ -84,6 +84,8 @@ model Comment {
   parent     Comment?        @relation("commentToComment", fields: [parentId], references: [id])
   parentId   String?
   children   Comment[]       @relation("commentToComment")
+  upvotes    Int             @default(0)
+  downvotes  Int             @default(0)
 }
 
 model BlogPostReport {

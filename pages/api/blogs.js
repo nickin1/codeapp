@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { generateRefreshToken, generateAccessToken } from "../../../lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -9,8 +8,8 @@ export default async function handler(req, res) {
         const { title, content, authorId, templates, tags} = req.body;
 
         try {
-            // Note that Prisma autmaotically fetches the corresponding author name because of the schema   relations!
-            const newBlog = prisma.BlogPost.create({
+            // Note that Prisma automatically fetches the corresponding author name because of the schema   relations!
+            const newBlog = prisma.blogPost.create({
                 data: {
                     title: title, 
                     content: content, 
@@ -36,6 +35,7 @@ export default async function handler(req, res) {
     else if (req.method === 'GET') {
         try {
             // findMany to retrieve all blog posts
+            // use await to ensure previous async operations complete!
             const posts = await prisma.blogPost.findMany({
                 // we are ensuring we include the fields that corresponds to other schema relation tables
                 include: {
