@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 export default async function handler(req, res) {
     // Create new blog post
     if (req.method === 'POST') {
-        const { title, content, authorId, templates, tags} = req.body;
+        const { title, content, authorId} = req.body;
 
         try {
             // Note that Prisma automatically fetches the corresponding author name because of the schema   relations!
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
                         connect: {id: templateId} // connect any existing templates
                     })),
                     tags: Tags?.map((tagId) => ({
-                        connect: {id: templateId} // connect any existing tags
+                        connect: {id: tagId} // connect any existing tags
                     }))
                 }
             })
