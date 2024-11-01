@@ -5,17 +5,23 @@ const prisma = new PrismaClient();
 export default async function handler(req, res) {
     // Create new template
     if (req.method === 'POST') {
-        const { title, description, code, language, authorId } = req.body;
+        const { title, description, code, language, tags, authorId } = req.body;
 
         try {
-            const newTemplate = prisma.codeTemplate.create({
+            const newTemplate = await prisma.codeTemplate.create({
                 data: {
-                    title: title,
-                    description: description,
-                    code: code,
-                    language: language,
-                    authorId: authorId,
-                    blogPosts: { create: [] }
+                    title,
+                    description,
+                    code,
+                    language,
+                    tags,
+                    author: {
+                        connect: { id: authorId }
+                    }
+                },
+                include: {
+                    author: true,
+                    blogPosts: true
                 }
             })
             res.status(201).json(newTemplate);
