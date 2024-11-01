@@ -5,29 +5,29 @@ const prisma = new PrismaClient();
 export default async function handler(req, res) {
     // Create new blog post
     if (req.method === 'POST') {
-        const { title, content, authorId} = req.body;
+        const { title, content, authorId } = req.body;
 
         try {
             // Note that Prisma automatically fetches the corresponding author name because of the schema   relations!
             const newBlog = prisma.blogPost.create({
                 data: {
-                    title: title, 
-                    content: content, 
+                    title: title,
+                    content: content,
                     authorId: authorId,
-                    comments: {create:[]},
-                    report: {create:[]},
+                    comments: { create: [] },
+                    report: { create: [] },
                     templates: CodeTemplate?.map((templateId) => ({
-                        connect: {id: templateId} // connect any existing templates
+                        connect: { id: templateId } // connect any existing templates
                     })),
                     tags: Tags?.map((tagId) => ({
-                        connect: {id: tagId} // connect any existing tags
+                        connect: { id: tagId } // connect any existing tags
                     }))
                 }
             })
             res.status(201).json(newBlog);
         } catch (error) {
             console.error("Error creating blog post:", error);
-            res.status(500).json({error: "Failed to create blog post"});
+            res.status(500).json({ error: "Failed to create blog post" });
         }
     }
 
@@ -48,9 +48,9 @@ export default async function handler(req, res) {
             })
 
             res.status(200).json(posts);
-        } catch(error) {
+        } catch (error) {
             console.error("Error retrieving blog posts:", error);
-            res.status(500).json({error: "Failed to retrieve blog posts"});
+            res.status(500).json({ error: "Failed to retrieve blog posts" });
         }
     }
 }
