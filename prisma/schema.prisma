@@ -26,6 +26,7 @@ model User {
   blogPostReports BlogPostReport[]
   commentReports  CommentReport[]
   refreshToken    RefreshToken[]
+  votes           UserVote[]
 }
 
 model RefreshToken {
@@ -63,6 +64,18 @@ model BlogPost {
   templates CodeTemplate[]
   tags      Tag[]
   report    BlogPostReport[]
+  votes     UserVote[]
+}
+
+model UserVote {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  blogPostId String?
+  blogPost   BlogPost? @relation(fields: [blogPostId], references: [id])
+  commentId  String?
+  comment    Comment?  @relation(fields: [commentId], references: [id])
+  type       Int // 1 for UPVOTE, -1 for DOWNVOTE
 }
 
 model Tag {
@@ -84,8 +97,7 @@ model Comment {
   parent     Comment?        @relation("commentToComment", fields: [parentId], references: [id])
   parentId   String?
   children   Comment[]       @relation("commentToComment")
-  upvotes    Int             @default(0)
-  downvotes  Int             @default(0)
+  votes      UserVote[]
 }
 
 model BlogPostReport {
