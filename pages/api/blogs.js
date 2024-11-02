@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export default async function handler(req, res) {
     // Create new blog post
     if (req.method === 'POST') {
-        const { title, content, authorId, templateIds, tagIds } = req.body;
+        const { title, content, authorId, templateIds, tags } = req.body;
 
         // Authorization check
         const authResult = await authorizeRequest(req, authorId); // Check if the user is authorized
@@ -26,9 +26,7 @@ export default async function handler(req, res) {
                     templates: templateIds ? {
                         connect: templateIds.map(id => ({ id }))
                     } : undefined,
-                    tags: tagIds ? {
-                        connect: tagIds.map(id => ({ id }))
-                    } : undefined
+                    tags: tags
                 },
             })
             res.status(201).json(newBlog);
