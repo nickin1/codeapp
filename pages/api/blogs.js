@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { authorizeRequest } from "../../lib/authorization";
 
 const prisma = new PrismaClient();
 
@@ -7,8 +8,14 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         const { title, content, authorId, templateIds, tagIds } = req.body;
 
+        // Authorization check
+        const authResult = await authorizeRequest(req, authorId); // Check if the user is authorized
+        if (!authResult.authorized) {
+            return res.status(403).json({ error: authResult.error }); // Return 403 if not authorized
+        }
+
         try {
-            // Note that Prisma automatically fetches the corresponding author name because of the schema   relations!
+            // Note that Prisma automatically fetches the corresponding author name because of the schema relations!
             const newBlog = await prisma.blogPost.create({
                 data: {
                     title,

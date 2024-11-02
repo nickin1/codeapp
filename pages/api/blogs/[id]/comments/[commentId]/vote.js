@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { authorizeRequest } from '../../../../../../lib/authorization'
 
 const prisma = new PrismaClient();
 
@@ -8,6 +9,13 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         try {
+
+            // Authorization check
+            const authResult = await authorizeRequest(req, userId);
+            if (!authResult.authorized) {
+                return res.status(403).json({ error: authResult.error });
+            }
+
             const existingVote = await prisma.userVote.findFirst({
                 where: { userId, commentId: commentId }
             });

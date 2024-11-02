@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { authorizeRequest } from "../../../lib/authorization";
 
 const prisma = new PrismaClient();
 
@@ -32,6 +33,23 @@ export default async function handler(req, res) {
     }
     else if (req.method === "PUT") {
         const { title, description, code, language, tags } = req.body;
+
+
+        // Fetch the template first
+        const template = await prisma.codeTemplate.findUnique({
+            where: { id },
+        });
+
+        if (!template) {
+            return res.status(404).json({ error: "Template not found" });
+        }
+
+        // Authorization check
+        const authResult = await authorizeRequest(req, template.authorId);
+        if (!authResult.authorized) {
+            return res.status(403).json({ error: authResult.error });
+        }
+
         try {
             const updatedTemplate = await prisma.codeTemplate.update({
                 where: {
@@ -61,6 +79,21 @@ export default async function handler(req, res) {
         }
     }
     else if (req.method === "DELETE") {
+        // Fetch the template first
+        const template = await prisma.codeTemplate.findUnique({
+            where: { id },
+        });
+
+        if (!template) {
+            return res.status(404).json({ error: "Template not found" });
+        }
+
+        // Authorization check
+        const authResult = await authorizeRequest(req, template.authorId);
+        if (!authResult.authorized) {
+            return res.status(403).json({ error: authResult.error });
+        }
+
         try {
 
             const deletedTemplate = await prisma.codeTemplate.delete({

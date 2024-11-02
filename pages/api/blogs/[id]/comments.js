@@ -1,10 +1,17 @@
 import { PrismaClient } from "@prisma/client";
+import { authorizeRequest } from "../../../../lib/authorization";
 
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
     if (req.method === 'POST') {
         const { content, authorId, blogPostId, parentId } = req.body;
+
+        // Authorization check
+        const authResult = await authorizeRequest(req, authorId);
+        if (!authResult.authorized) {
+            return res.status(403).json({ error: authResult.error });
+        }
 
         if (!content) {
             return res.status(400).json({ error: "content field empty" });

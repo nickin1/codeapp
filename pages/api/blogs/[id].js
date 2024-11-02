@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { authorizeRequest } from '../../../lib/authorization';
 
 const prisma = new PrismaClient();
 
@@ -52,6 +53,21 @@ export default async function handler(req, res) {
             //     },
             // });
 
+
+            const blogPost = await prisma.blogPost.findUnique({
+                where: { id },
+            });
+
+            if (!blogPost) {
+                return res.status(404).json({ error: "Blog post not found" });
+            }
+
+            // Authorization check
+            const authResult = await authorizeRequest(req, blogPost.authorId);
+            if (!authResult.authorized) {
+                return res.status(403).json({ error: authResult.error });
+            }
+
             const updatedBlogPost = await prisma.blogPost.update({
                 where: {
                     id
@@ -78,6 +94,7 @@ export default async function handler(req, res) {
             return res.status(200).json(updatedBlogPost);
         } catch (error) {
             if (error.code === "P2025") {
+                console.error("Error updating blogpost:", error);
                 res.status(404).json({ error: "Blog post not found" });
             } else {
                 res.status(500).json({ error: "Failed to update blog post" });
@@ -86,6 +103,20 @@ export default async function handler(req, res) {
     }
     else if (req.method === "DELETE") {
         try {
+            const blogPost = await prisma.blogPost.findUnique({
+                where: { id },
+            });
+
+            if (!blogPost) {
+                return res.status(404).json({ error: "Blog post not found" });
+            }
+
+            // Authorization check
+            const authResult = await authorizeRequest(req, blogPost.authorId);
+            if (!authResult.authorized) {
+                return res.status(403).json({ error: authResult.error });
+            }
+
             const deletedBlogPost = await prisma.blogPost.delete({
                 where: { id }
             });
