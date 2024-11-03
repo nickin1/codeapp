@@ -26,6 +26,7 @@ model User {
   blogPostReports BlogPostReport[]
   commentReports  CommentReport[]
   refreshToken    RefreshToken[]
+  votes           UserVote[]
 }
 
 model RefreshToken {
@@ -49,6 +50,7 @@ model CodeTemplate {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   blogPosts   BlogPost[]
+  forked      Boolean    @default(false)
 }
 
 model BlogPost {
@@ -61,14 +63,20 @@ model BlogPost {
   updatedAt DateTime         @updatedAt
   comments  Comment[]
   templates CodeTemplate[]
-  tags      Tag[]
+  tags      String
   report    BlogPostReport[]
+  votes     UserVote[]
 }
 
-model Tag {
-  id        String     @id @default(cuid())
-  name      String
-  blogPosts BlogPost[]
+model UserVote {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  blogPostId String?
+  blogPost   BlogPost? @relation(fields: [blogPostId], references: [id])
+  commentId  String?
+  comment    Comment?  @relation(fields: [commentId], references: [id])
+  type       Int // 1 for UPVOTE, -1 for DOWNVOTE
 }
 
 model Comment {
@@ -84,26 +92,29 @@ model Comment {
   parent     Comment?        @relation("commentToComment", fields: [parentId], references: [id])
   parentId   String?
   children   Comment[]       @relation("commentToComment")
+  votes      UserVote[]
 }
 
 model BlogPostReport {
-  id         String    @id @default(cuid())
-  reason     String
-  reporterId String
-  reporter   User      @relation(fields: [reporterId], references: [id])
-  blogPostId String?
-  blogPost   BlogPost? @relation(fields: [blogPostId], references: [id])
-  commentId  String?
+  id                    String    @id @default(cuid())
+  reason                String
+  additionalExplanation String
+  reporterId            String
+  reporter              User      @relation(fields: [reporterId], references: [id])
+  blogPostId            String?
+  blogPost              BlogPost? @relation(fields: [blogPostId], references: [id])
+  createdAt             DateTime  @default(now())
 }
 
 model CommentReport {
-  id         String   @id @default(cuid())
-  reason     String
-  reporterId String
-  reporter   User     @relation(fields: [reporterId], references: [id])
-  commentId  String?
-  comment    Comment? @relation(fields: [commentId], references: [id])
-  createdAt  DateTime @default(now())
+  id                    String   @id @default(cuid())
+  reason                String
+  additionalExplanation String
+  reporterId            String
+  reporter              User     @relation(fields: [reporterId], references: [id])
+  commentId             String?
+  comment               Comment? @relation(fields: [commentId], references: [id])
+  createdAt             DateTime @default(now())
 }
 
 // kept here for reference
