@@ -1,12 +1,6 @@
 import { codeExecutor } from '../../lib/codeExecution';
 import crypto from 'crypto';
 
-export const config = {
-    api: {
-        responseLimit: false,
-    },
-};
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
