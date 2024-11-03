@@ -37,21 +37,23 @@ export default async function handler(req, res) {
             res.status(500).json({ error: "Failed to create template" });
         }
     }
-
-    // List templates
-    else if (req.method === 'GET') {
-        try {
-            const templates = await prisma.codeTemplate.findMany({
-                include: {
-                    author: true,
-                    blogPosts: true
-                }
-            })
-
-            res.status(200).json(templates);
-        } catch (error) {
-            console.error("Error retrieving templates:", error);
-            res.status(500).json({ error: "Failed to retrieve templates" });
-        }
+    else {
+        res.status(405).end(`Method Not Allowed`);
     }
+    // // List templates
+    // else if (req.method === 'GET') {
+    //     try {
+    //         const templates = await prisma.codeTemplate.findMany({
+    //             include: {
+    //                 author: true,
+    //                 blogPosts: true
+    //             }
+    //         })
+
+    //         res.status(200).json(templates);
+    //     } catch (error) {
+    //         console.error("Error retrieving templates:", error);
+    //         res.status(500).json({ error: "Failed to retrieve templates" });
+    //     }
+    // }
 }

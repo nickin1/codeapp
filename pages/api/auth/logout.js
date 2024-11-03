@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { generateRefreshToken, generateAccessToken } from "../../../lib/auth";
 
 const prisma = new PrismaClient();
 
