@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { off } from 'process';
+import { authorizeRequest } from '../../../lib/authorization';
 
 const prisma = new PrismaClient();
 
@@ -7,19 +9,64 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
         try {
-            // Retrieve all relevant blog posts
-            const blogPosts = await prisma.blogPost.findMany({
-                where: {
-                    OR: [
-                        { title: { contains: searchTerm || '' } },
-                        { content: { contains: searchTerm || '' } },
-                        { tags: { contains: searchTerm || '' } },
-                    ],
-                },
-                include: {
-                    votes: true, // Include votes for each blog post
-                },
-            });
+
+            const authResult = await authorizeRequest(req);
+
+            const userId = authResult.userId;
+
+            let blogPosts;
+
+            if (authResult.isAdmin) {
+                // Retrieve all relevant blog posts
+                blogPosts = await prisma.blogPost.findMany({
+                    where: {
+                        OR: [
+                            { title: { contains: searchTerm || '' } },
+                            { content: { contains: searchTerm || '' } },
+                            { tags: { contains: searchTerm || '' } },
+                        ],
+                    },
+                    include: {
+                        votes: true, // Include votes for each blog post
+                    },
+                });
+            }
+            else {
+                // Retrieve relevant blog posts
+                blogPosts = await prisma.blogPost.findMany({
+                    where: {
+                        OR: [
+                            {
+                                AND: [
+                                    { hidden: false }, // Show only non-hidden posts
+                                    {
+                                        OR: [
+                                            { title: { contains: searchTerm || '' } },
+                                            { content: { contains: searchTerm || '' } },
+                                            { tags: { contains: searchTerm || '' } },
+                                        ],
+                                    },
+                                ],
+                            },
+                            userId ? {
+                                AND: [
+                                    { authorId: userId }, // Allow user to see their own posts
+                                    {
+                                        OR: [
+                                            { title: { contains: searchTerm || '' } },
+                                            { content: { contains: searchTerm || '' } },
+                                            { tags: { contains: searchTerm || '' } },
+                                        ],
+                                    },
+                                ],
+                            } : null, // Do not include the user-specific clause if userId is null
+                        ].filter(Boolean),
+                    },
+                    include: {
+                        votes: true, // Include votes for each blog post
+                    },
+                });
+            }
 
             // Calculate scores for all blog posts
             const resultsWithScores = blogPosts.map(blogPost => {

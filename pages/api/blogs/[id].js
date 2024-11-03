@@ -8,24 +8,53 @@ export default async function handler(req, res) {
 
     if (req.method === "GET") {
         try {
+
             const blogPost = await prisma.blogPost.findUnique({
                 where: {
                     id,
                 },
                 include: {
-                    author: true,
+                    author: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                        }
+                    },
                     comments: true,
-                    templates: true,
-                    tags: true,
-                    report: true,
+                    templates: true
                 },
             });
 
             if (!blogPost) {
                 return res.status(404).json({ error: "Blog post not found" });
             }
-            return res.status(200).json(blogPost);
+
+
+            const authResult = await authorizeRequest(req, blogPost.authorId);
+
+            // dont show if hidden
+            if (blogPost.hidden && !authResult.authorized) {
+                return res.status(404).json({ error: "Blog post unavailable" });
+            }
+
+            // Filter comments based on user's authorization level
+            const filteredComments = blogPost.comments.filter(comment => {
+                if (authResult.isAdmin || comment.authorId === authResult.userId) {
+                    return true; // Show if user is admin or the author of the comment
+                }
+                return !comment.hidden; // Show only non-hidden comments otherwise
+            });
+
+            // Create a response object without the original comments
+            const responseBlogPost = {
+                ...blogPost,
+                comments: filteredComments, // Replace original comments with filtered comments
+            };
+
+            return res.status(200).json(responseBlogPost);
         } catch (error) {
+            console.error("Error occured when retrieving blog post:", error);
             if (error.code === "P2025") {
                 res.status(404).json({ error: "Blog post not found" });
             } else {
@@ -34,7 +63,7 @@ export default async function handler(req, res) {
         }
     }
     else if (req.method === "PUT") {
-        const { title, content, templateIds, tagIds } = req.body;
+        const { title, content, templateIds, tags } = req.body;
 
         try {
             // const blogPost = await prisma.blogPost.findUnique({
@@ -68,6 +97,10 @@ export default async function handler(req, res) {
                 return res.status(403).json({ error: authResult.error });
             }
 
+            if (blogPost.hidden) {
+                return res.status(403).json({ error: "This post is hidden, you do not have permission to edit it" });
+            }
+
             const updatedBlogPost = await prisma.blogPost.update({
                 where: {
                     id
@@ -78,21 +111,19 @@ export default async function handler(req, res) {
                     templates: templateIds ? {
                         set: templateIds.map(id => ({ id })) // Sets templates to new list
                     } : undefined,
-                    tags: tagIds ? {
-                        set: tagIds.map(id => ({ id })) // Sets tags to new list
-                    } : undefined
+                    tags: tags ? tags : undefined
                 },
                 include: {
                     author: true,
                     comments: true,
                     templates: true,
-                    tags: true,
                     report: true,
                 },
             })
 
             return res.status(200).json(updatedBlogPost);
         } catch (error) {
+            console.error("Error updating blog post:", error);
             if (error.code === "P2025") {
                 console.error("Error updating blogpost:", error);
                 res.status(404).json({ error: "Blog post not found" });
