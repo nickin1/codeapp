@@ -16,7 +16,7 @@ model User {
   firstName       String?
   lastName        String?
   phoneNumber     String?
-  avatar          String?
+  avatar          String           @default("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAABmJLR0QA/wD/AP+gvaeTAAACGUlEQVR4nO3TsQ2AMADAsNL+/xC3IdEHqqww2BdkyfXc6x3A0fw6AP7MIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDAJhAyfSBEga26+EAAAAAElFTkSuQmCC")
   isAdmin         Boolean          @default(false)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -66,6 +66,7 @@ model BlogPost {
   tags      String
   report    BlogPostReport[]
   votes     UserVote[]
+  hidden    Boolean          @default(false)
 }
 
 model UserVote {
@@ -93,6 +94,7 @@ model Comment {
   parentId   String?
   children   Comment[]       @relation("commentToComment")
   votes      UserVote[]
+  hidden     Boolean         @default(false)
 }
 
 model BlogPostReport {
