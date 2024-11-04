@@ -1,0 +1,1392 @@
+{
+	"info": {
+		"_postman_id": "ae3ce066-f742-45de-87e9-85944ea564f6",
+		"name": "Scriptorium",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38910873",
+		"_collection_link": "https://scriptorium-4910.postman.co/workspace/Scriptorium-Workspace~04a700d9-0416-45b2-8226-279861fbd9a5/collection/38910873-ae3ce066-f742-45de-87e9-85944ea564f6?action=share&source=collection_link&creator=38910873"
+	},
+	"item": [
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "/api/admin/reports",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNmM4NW4wMDBydGtlbGI0NmYwOWxhIiwiaWF0IjoxNzMwNjczNTM3LCJleHAiOjE3MzA2NzQ0Mzd9.c0MI_O6W6Ft0Z5vusjLncloO93AYy-ck9eO1nQml4GE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/admin/reports?page=1&limit=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"reports"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/admin/hide-content",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTJwMHNtNjMwMDAweG91Z3c2dG90dm5zIiwiaWF0IjoxNzMwNjYzNjM2LCJleHAiOjE3MzA2NjQ1MzZ9.z0R471ZBi10j7W_eCCSD44FEGDTEfDlLU4Xq8RrvaqA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"contentId\": \"cm30hsafw000612i90e1bwoib\",\n    \"contentType\": \"comment\",\n    \"hide\": true\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/admin/hide-content",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"hide-content"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "/api/auth/signup",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"newuser@example.com\",\n    \"password\": \"password123\",\n    \"firstName\": \"New\",\n    \"lastName\": \"User\",\n    \"phoneNumber\": \"1234567890\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/auth/refresh",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/refresh",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/auth/login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"newuser@example.com\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/auth/logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/auth/logout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Code Execution",
+			"item": [
+				{
+					"name": "Python - simple",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": " application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": " text/event-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"print('Hello, World!')\",\n  \"language\": \"python\",\n  \"input\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/execute",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"execute"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Python",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": " application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": " text/event-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\n{\n    \"code\": \"import sys\\nimport time\\n\\ndef fibonacci(n):\\n    if n <= 1:\\n        return n\\n    else:\\n        return fibonacci(n-1) + fibonacci(n-2)\\n\\nprint(\\\"Fibonacci sequence up to 10th term:\\\")\\nsys.stdout.flush()  # Flush the output buffer\\n\\nfor i in range(10):\\n    print(fibonacci(i), end=\\\" \\\")\\n    sys.stdout.flush()  # Flush the output buffer after each number\\n    time.sleep(0.5)  # Add a 0.5 second delay\\n\\nprint()  # Print a newline at the end\\nsys.stdout.flush()  # Final flush\",\n    \"language\": \"python\",\n    \"input\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/execute",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"execute"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Python",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": " application/json",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": " text/event-stream",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "\n{\n    \"code\": \"import sys\\nimport time\\n\\ndef fibonacci(n):\\n    if n <= 1:\\n        return n\\n    else:\\n        return fibonacci(n-1) + fibonacci(n-2)\\n\\nprint(\\\"Fibonacci sequence up to 10th term:\\\")\\nsys.stdout.flush()  # Flush the output buffer\\n\\nfor i in range(10):\\n    print(fibonacci(i), end=\\\" \\\")\\n    sys.stdout.flush()  # Flush the output buffer after each number\\n    time.sleep(0.5)  # Add a 0.5 second delay\\n\\nprint()  # Print a newline at the end\\nsys.stdout.flush()  # Final flush\",\n    \"language\": \"python\",\n    \"input\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/execute",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"execute"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/event-stream"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-cache"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 04 Nov 2024 01:02:41 GMT"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								}
+							],
+							"cookie": [],
+							"body": "data: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"Fibonacci sequence up to 10th term:\\n0 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"1 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"1 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"2 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"3 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"5 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"8 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"13 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"21 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"34 \"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"stdout\",\"data\":\"\\n\"}\n\ndata: {\"sessionId\":\"efba4fd0f2949dd6fa5a6a7d7cc5bb0c\",\"type\":\"status\",\"data\":\"completed\",\"code\":0}\n\n"
+						}
+					]
+				},
+				{
+					"name": "Python - memory limit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": " application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": " text/event-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"import time\\n\\ndef main():\\n    size = 1024 * 1024 * 1024  # 1 GB\\n    buffer = []\\n\\n    # Allocate memory in chunks\\n    chunk_size = 64 * 1024 * 1024  # 64 MB\\n    allocated = 0\\n\\n    try:\\n        while allocated < size:\\n            # Allocate memory in chunks\\n            buffer.append('A' * chunk_size)  # Add 64 MB of data to the list\\n            allocated += chunk_size\\n            print(f\\\"Allocated {allocated / (1024 * 1024):.2f} MB of memory.\\\")\\n            time.sleep(1)  # Sleep for a second to simulate ongoing work\\n\\n    except MemoryError:\\n        print(\\\"Memory allocation failed!\\\")\\n\\nif __name__ == \\\"__main__\\\":\\n    main()\",\n  \"language\": \"python\",\n  \"input\": \"\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/execute",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"execute"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Javascript",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": " application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": " text/event-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"function quickSort(arr) {\\n    if (arr.length <= 1) {\\n        return arr;\\n    }\\n\\n    const pivot = arr[Math.floor(arr.length / 2)];\\n    const left = arr.filter(x => x < pivot);\\n    const middle = arr.filter(x => x === pivot);\\n    const right = arr.filter(x => x > pivot);\\n\\n    return [...quickSort(left), ...middle, ...quickSort(right)];\\n}\\n\\nconst unsortedArray = [64, 34, 25, 12, 22, 11, 90];\\nconsole.log(\\\"Unsorted array:\\\", unsortedArray);\\nconsole.log(\\\"Sorted array:\\\", quickSort(unsortedArray));\",\n    \"language\": \"javascript\",\n    \"input\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/execute",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"execute"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "C++ - failed compilation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": " application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": " text/event-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"#include <iostream>\\n#include <vector>\\n#include <algorithm>\\n\\nint main() {\\n    std::vector<int> numbers = {5, 2, 8, 1, 9, 3, 7, 4, 6};\\n    \\n    std::cout << \\\"Original vector: \\\";\\n    for (int num : numbers) {\\n        std::cout << num << \\\" \\\";\\n    }\\n    std::cout << std::endl;\\n\\n    std::sort(numbers.begin(), numbers.end());\\n\\n    std::cout << \\\"Sorted vector: \\\";\\n    for (int num : numbers) {\\n        std::cout << num << \\\" \\\";\\n    }\\n    std::cout << std::endl;\\n\\n    return 0;\\n}\",\n    \"language\": \"cpp\",\n    \"input\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/execute",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"execute"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Java - compilation error",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": " application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": " text/event-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"import java.util.HashMap;\\nimport java.util.Map;\\n\\npublic class WordFrequency {\\n    public static void main(String[] args) {\\n        String text = \\\"the quick brown fox jumps over the lazy dog\\\";\\n        String[] words = text.split(\\\" \\\");\\n        \\n        Map<String, Integer> frequencyMap = new HashMap<>();\\n        \\n        for (String word : words) {\\n            frequencyMap.put(word, frequencyMap.getOrDefault(word, 0) + 1);\\n        }\\n        \\n        System.out.println(\\\"Word frequencies:\\\");\\n        for (Map.Entry<String, Integer> entry : frequencyMap.entrySet()) {\\n            System.out.println(entry.getKey() + \\\": \\\" + entry.getValue());\\n        }\\n    }\\n}\",\n    \"language\": \"java\",\n    \"input\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/execute",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"execute"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "C",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": " application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": " text/event-stream",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"#include <stdio.h>\\n#include <stdlib.h>\\n#include <time.h>\\n\\n#define SIZE 10\\n\\nvoid bubbleSort(int arr[], int n) {\\n    for (int i = 0; i < n-1; i++) {\\n        for (int j = 0; j < n-i-1; j++) {\\n            if (arr[j] > arr[j+1]) {\\n                int temp = arr[j];\\n                arr[j] = arr[j+1];\\n                arr[j+1] = temp;\\n            }\\n        }\\n    }\\n}\\n\\nint main() {\\n    int arr[SIZE];\\n    srand(time(NULL));\\n\\n    printf(\\\"Original array: \\\");\\n    for (int i = 0; i < SIZE; i++) {\\n        arr[i] = rand() % 100;\\n        printf(\\\"%d \\\", arr[i]);\\n    }\\n    printf(\\\"\\\\n\\\");\\n\\n    bubbleSort(arr, SIZE);\\n\\n    printf(\\\"Sorted array: \\\");\\n    for (int i = 0; i < SIZE; i++) {\\n        printf(\\\"%d \\\", arr[i]);\\n    }\\n    printf(\\\"\\\\n\\\");\\n\\n    return 0;\\n}\",\n    \"language\": \"c\",\n    \"input\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/execute",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"execute"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Blog Management",
+			"item": [
+				{
+					"name": "Voting",
+					"item": [
+						{
+							"name": "/api/blogs/:id/vote",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjczNDI4LCJleHAiOjE3MzA2NzQzMjh9.jzPbD8uH6Jo9_hkzYcv29qpt-TzIpbK6Jt_wtr-gxpU\n",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"userId\": \"cm325dug80000tkellvncu82s\",\n  \"type\": 1\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/blogs/:id/vote",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"blogs",
+										":id",
+										"vote"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "cm325mz7h0004tkelecfgsweh"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/blog/:id/comments/:id/vote",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjczNDI4LCJleHAiOjE3MzA2NzQzMjh9.jzPbD8uH6Jo9_hkzYcv29qpt-TzIpbK6Jt_wtr-gxpU",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"userId\": \"cm325dug80000tkellvncu82s\",\n  \"type\": 1\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/blogs/:id/comments/:commentId/vote",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"blogs",
+										":id",
+										"comments",
+										":commentId",
+										"vote"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "cm325mz7h0004tkelecfgsweh"
+										},
+										{
+											"key": "commentId",
+											"value": "cm2zizkgl0000o8hwf8pgy69z"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Reporting",
+					"item": [
+						{
+							"name": "/api/blogs/:id/report",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjcyMjU2LCJleHAiOjE3MzA2NzMxNTZ9.2CK_xt7heky-wuFmSusoD8jNWXc6NGAq7KQKMao6cA0",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"userId\": \"cm325dug80000tkellvncu82s\",\n  \"reason\": \"Inappropriate content\",\n  \"additionalExplanation\": \"The blog post contains offensive language and should be reviewed. final test \"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/blogs/:id/report",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"blogs",
+										":id",
+										"report"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "cm325mz7h0004tkelecfgsweh"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/blog/:id/comments/:id/report",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjcyMjU2LCJleHAiOjE3MzA2NzMxNTZ9.2CK_xt7heky-wuFmSusoD8jNWXc6NGAq7KQKMao6cA0",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"userId\": \"cm325dug80000tkellvncu82s\",\n  \"reason\": \"Inappropriate content\",\n  \"additionalExplanation\": \"The comment contains offensive language and should be reviewed. final test\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/blogs/:id/comments/:commentId/report",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"blogs",
+										":id",
+										"comments",
+										":commentId",
+										"report"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "cm325mz7h0004tkelecfgsweh"
+										},
+										{
+											"key": "commentId",
+											"value": "cm325qn3h0006tkelhvmlpa3h"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "/api/blogs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjcxOTMzLCJleHAiOjE3MzA2NzI4MzN9._zvviEbG2EpGV1qGoBYsBa26Zfn-MYyZoJA_kztyRXA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Final Test Blog\",\n    \"content\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\",\n    \"authorId\": \"cm325dug80000tkellvncu82s\",\n    \"tags\": \"Javascript\",\n    \"templateIds\": [\"cm2zdl3yf000f1sbfrx4eeir8\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/blogs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blogs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/blogs/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjcyMjU2LCJleHAiOjE3MzA2NzMxNTZ9.2CK_xt7heky-wuFmSusoD8jNWXc6NGAq7KQKMao6cA0",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blogs/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blogs",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "cm2zbkw5f00041sbfa04yio17"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/blogs/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjcyMjU2LCJleHAiOjE3MzA2NzMxNTZ9.2CK_xt7heky-wuFmSusoD8jNWXc6NGAq7KQKMao6cA0",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Blog Post Title Final 2\",\n    \"content\": \"This is the updated content of the blog post.\",\n    \"templateIds\": [],\n    \"tags\": \"Javascript,C#\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/blogs/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blogs",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "cm325hnhw0003tkelzkyjscv5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/blogs/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjcyMjU2LCJleHAiOjE3MzA2NzMxNTZ9.2CK_xt7heky-wuFmSusoD8jNWXc6NGAq7KQKMao6cA0",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blogs/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blogs",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "cm325hnhw0003tkelzkyjscv5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/blogs/:id/comments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMyNWR1ZzgwMDAwdGtlbGx2bmN1ODJzIiwiaWF0IjoxNzMwNjcyMjU2LCJleHAiOjE3MzA2NzMxNTZ9.2CK_xt7heky-wuFmSusoD8jNWXc6NGAq7KQKMao6cA0",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"This is a new reply on the final blog post that will be reported. 2\",\n    \"authorId\": \"cm325dug80000tkellvncu82s\",\n    \"blogPostId\": \"cm325mz7h0004tkelecfgsweh\"\n}\n\n//optional parentId can be passed",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/blogs/:id/comments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blogs",
+								":id",
+								"comments"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/blogs/search",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTJwMHNtNjMwMDAweG91Z3c2dG90dm5zIiwiaWF0IjoxNzMwNjY0Mzc0LCJleHAiOjE3MzA2NjUyNzR9.ZGsrA5cJ2Q3nmJIsE6BZH6TxigTy5JFz7fHPjOfS3OY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blogs/search?searchTerm=final",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blogs",
+								"search"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "final"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Template Management",
+			"item": [
+				{
+					"name": "/api/templates",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Example Code Template\",\n    \"description\": \"This is a sample template for demonstrating code structure.\",\n    \"code\": \"function example() { return 'Hello, world!'; }\",\n    \"language\": \"JavaScript\",\n    \"tags\": \"example,template,code\",\n    \"authorId\": \"cm2zbkarm00011sbfbnh35j5d\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/templates",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"templates"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/templates/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/templates/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"templates",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "cm2zd4bpf000c1sbfnvc2u8by"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/templates/:id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Template Title\",\n    \"description\": \"Updated description of the code template.\",\n    \"code\": \"function updatedExample() { return 'Updated code'; }\",\n    \"language\": \"JavaScript\",\n    \"tags\": \"updated,example,code\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/templates/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"templates",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "cm2zd4bpf000c1sbfnvc2u8by"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/templates/:id",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/templates/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"templates",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "cm2zdl3py000e1sbfj4a0jurc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/templates/:id/fork",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMwZmV2a2gwMDAwNW0xMHI5ajhybTRqIiwiaWF0IjoxNzMwNTc2NjM4LCJleHAiOjE3MzA1Nzc1Mzh9.LzO97-wUUUDr9vPsi8diuOihVjyTuc51bR3D1vytEJk",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"cm30fevkh00005m10r9j8rm4j\",\n    \"newTitle\": \"Forked Template Title 2\",\n    \"newDescription\": \"This is an updated description.\",\n    \"newCode\": null,  // This will use the original code\n    \"newLanguage\": \"JavaScript\",\n    \"newTags\": null  // This will use the original tags\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/templates/:id/fork",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"templates",
+								":id",
+								"fork"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "cm2zdl3yf000f1sbfrx4eeir8"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/templates/search",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTMwZmV2a2gwMDAwNW0xMHI5ajhybTRqIiwiaWF0IjoxNzMwNTgwNjc2LCJleHAiOjE3MzA1ODE1NzZ9.rbDuoaZZ3c_wYsxx1ItIE3kdYsErX2UW9wJ8tmKbA_I",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"cm30fevkh00005m10r9j8rm4j\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/templates/search?searchTerm=function&page=1&limit=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"templates",
+								"search"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "function"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/templates/search - no auth",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/templates/search?searchTerm=example()&page=1&limit=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"templates",
+								"search"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "example()"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "/api/profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/profile?userId=cm2tqgfep0000fqy5p5g8dgqi",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"profile"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "cm2tqgfep0000fqy5p5g8dgqi"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api/profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTJwMHNtNjMwMDAweG91Z3c2dG90dm5zIiwiaWF0IjoxNzMwNjY3MTI1LCJleHAiOjE3MzA2NjgwMjV9.CTkTIKhA4jE11Fw24V9paSy_ym4NTUkcoqc0M8L7sQQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Jane Admin\",\n    \"lastName\": \"Doe\",\n    \"phone\": \"+1234567890\",\n    \"color\": \"green\",\n    \"email\": \"owner@e.com\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/profile?userId=cm2p0sm630000xougw6totvns",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"profile"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "cm2p0sm630000xougw6totvns"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
