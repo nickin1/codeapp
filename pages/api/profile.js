@@ -1,5 +1,3 @@
-// pages/api/user/profile.js
-
 import { PrismaClient } from "@prisma/client";
 import { authorizeRequest } from "../../lib/authorization";
 
@@ -91,3 +89,5 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: "Method not allowed" });
     }
 }
+
+// used chatGPT for color validation

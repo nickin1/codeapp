@@ -165,3 +165,5 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 }
+
+// used chatGPT for prisma queries and general code structure

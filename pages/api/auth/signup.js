@@ -66,3 +66,5 @@ export default async function handler(req, res) {
         res.status(500).json({ message: 'Internal Server Error' })
     }
 }
+
+//used chatGPT to figure out how to set the refresh token correctly

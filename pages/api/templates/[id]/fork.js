@@ -36,7 +36,6 @@ export default async function handler(req, res) {
                 return res.status(404).json({ message: 'Template not found' });
             }
 
-            // Create the forked template using provided parameters or falling back to the original template's values
             const forkedTemplate = await prisma.codeTemplate.create({
                 data: {
                     title: newTitle || originalTemplate.title,

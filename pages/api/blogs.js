@@ -38,27 +38,6 @@ export default async function handler(req, res) {
     else {
         res.status(405).end(`Method Not Allowed`);
     }
-
-    // // List blog posts
-    // else if (req.method === 'GET') {
-    //     try {
-    //         // findMany to retrieve all blog posts
-    //         // use await to ensure previous async operations complete!
-    //         const posts = await prisma.blogPost.findMany({
-    //             // we are ensuring we include the fields that corresponds to other schema relation tables
-    //             include: {
-    //                 author: true,
-    //                 comments: true,
-    //                 templates: true,
-    //                 tags: true,
-    //                 report: true
-    //             }
-    //         })
-
-    //         res.status(200).json(posts);
-    //     } catch (error) {
-    //         console.error("Error retrieving blog posts:", error);
-    //         res.status(500).json({ error: "Failed to retrieve blog posts" });
-    //     }
-    // }
 }
+
+// used chatGPT for prisma queries

@@ -20,7 +20,6 @@ export default async function handler(req, res) {
             }
         });
 
-
         res.setHeader('Set-Cookie', 'refreshToken=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict');
 
         res.status(200).json({ message: 'Logged out successfully' });
@@ -30,3 +29,5 @@ export default async function handler(req, res) {
         res.status(500).json({ message: 'Internal server error' });
     }
 }
+
+// used chatGPT to figure out how to set the refresh token correctly

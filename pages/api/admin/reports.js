@@ -77,3 +77,5 @@ export default async function handler(req, res) {
         res.status(405).end(`Method Not Allowed`);
     }
 }
+
+// used chatGPT to help with prisma queries
