@@ -119,4 +119,4 @@ model CommentReport {
   createdAt             DateTime @default(now())
 }
 
-// used dev0 to generate part of schema
+// used v0.dev to generate part of schema
