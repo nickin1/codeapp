@@ -119,17 +119,4 @@ model CommentReport {
   createdAt             DateTime @default(now())
 }
 
-// kept here for reference
-// model Report {
-//   id         String    @id @default(cuid())
-//   reason     String
-//   reporterId String
-//   reporter   User      @relation(fields: [reporterId], references: [id])
-//   blogPostId String?
-//   blogPost   BlogPost? @relation(fields: [blogPostId], references: [id])
-//   commentId  String?
-//   comment    Comment?  @relation(fields: [commentId], references: [id])
-//   createdAt  DateTime  @default(now())
-// }
-
 // used dev0 to generate part of schema
