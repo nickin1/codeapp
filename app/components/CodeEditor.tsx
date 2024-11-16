@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
+import { useTheme } from '@/app/context/ThemeContext';
 
 interface CodeEditorProps {
     value: string;
@@ -12,18 +13,20 @@ interface CodeEditorProps {
 export default function CodeEditor({ value, onChange, language }: CodeEditorProps) {
     const editorRef = useRef<HTMLDivElement>(null);
     const monacoEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+    const { theme } = useTheme();
 
     useEffect(() => {
         if (editorRef.current) {
             monacoEditorRef.current = monaco.editor.create(editorRef.current, {
                 value,
                 language,
-                theme: 'vs-dark',
+                theme: theme === 'dark' ? 'vs-dark' : 'vs-light',
                 automaticLayout: true,
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,
                 fontSize: 14,
                 lineNumbers: 'on',
+                renderLineHighlight: 'none',
             });
 
             monacoEditorRef.current.onDidChangeModelContent(() => {
@@ -35,6 +38,12 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
             monacoEditorRef.current?.dispose();
         };
     }, []);
+
+    useEffect(() => {
+        if (monacoEditorRef.current) {
+            monaco.editor.setTheme(theme === 'dark' ? 'vs-dark' : 'vs-light');
+        }
+    }, [theme]);
 
     useEffect(() => {
         if (monacoEditorRef.current) {
@@ -54,6 +63,6 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     }, [language]);
 
     return (
-        <div ref={editorRef} className="h-[500px] border rounded-md overflow-hidden" />
+        <div ref={editorRef} className="h-[500px] border rounded-md overflow-hidden dark:border-gray-700" />
     );
 }
