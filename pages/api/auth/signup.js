@@ -56,6 +56,7 @@ export default async function handler(req, res) {
                 email: newUser.email,
                 firstName: newUser.firstName,
                 lastName: newUser.lastName,
+                avatar: newUser.avatar,
             },
             accessToken,
         });

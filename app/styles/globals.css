@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply text-gray-900 dark:text-gray-100;
-  }
-}
-
 @layer components {
   .nav-link {
     @apply inline-flex items-center px-1 pt-1 text-sm font-medium
@@ -25,4 +19,4 @@
     @apply block px-4 py-2 text-sm text-gray-700 dark:text-gray-300
            hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left;
   }
-}
+} 

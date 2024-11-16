@@ -76,7 +76,7 @@ export default async function handler(req, res) {
                     lastName: lastName || originalUser.lastName,
                     phoneNumber: phone || originalUser.phoneNumber,
                     email: email || originalUser.email,
-                    avatar: colorOptions[color], // Set the color to the corresponding base64 value
+                    avatar: colorOptions[color] || originalUser.avatar, // Set the color to the corresponding base64 value
                 },
             });
 
