@@ -131,29 +131,42 @@ export class DockerExecutor {
                     }
                 }, 10000);
 
-                // Modified stream handling for real-time output
-                stream.on('data', (chunk) => {
-                    // First byte is stream type (1 for stdout, 2 for stderr)
-                    const streamType = chunk[0];
-                    const data = chunk.slice(8).toString();
+                // Buffer to hold incomplete frames
+                let buffer = Buffer.alloc(0);
 
-                    // Split the data into lines and process each line separately
-                    const lines = data.split('\n');
-                    for (const line of lines) {
-                        if (line.trim()) {  // Only process non-empty lines
-                            if (streamType === 1) {
-                                stdout += line + '\n';
-                                if (onOutput) {
-                                    onOutput('stdout', line + '\n');
-                                }
-                            } else if (streamType === 2) {
-                                stderr += line + '\n';
-                                if (onOutput) {
-                                    onOutput('stderr', line + '\n');
-                                }
-                            }
-                            console.log(`Stream type ${streamType}, line: ${line}`);
+                stream.on('data', (chunk: Buffer) => {
+                    buffer = Buffer.concat([buffer, chunk]);
+
+                    // Process all complete frames in the buffer
+                    while (buffer.length >= 8) { // Minimum frame size is 8 bytes (header)
+                        const frameHeader = buffer.slice(0, 8);
+                        const streamType = frameHeader[0];
+                        const frameSize = frameHeader.readUInt32BE(4); // Last 4 bytes contain the size
+
+                        // Check if we have a complete frame
+                        if (buffer.length < 8 + frameSize) {
+                            break; // Wait for more data
                         }
+
+                        // Extract the frame payload
+                        const frameContent = buffer.slice(8, 8 + frameSize).toString('utf8');
+
+                        // Update the buffer to remove the processed frame
+                        buffer = buffer.slice(8 + frameSize);
+
+                        // Handle the frame content
+                        if (streamType === 1) {
+                            stdout += frameContent;
+                            if (onOutput) {
+                                onOutput('stdout', frameContent);
+                            }
+                        } else if (streamType === 2) {
+                            stderr += frameContent;
+                            if (onOutput) {
+                                onOutput('stderr', frameContent);
+                            }
+                        }
+                        console.log(`Stream type ${streamType}, content: ${frameContent}`);
                     }
                 });
 

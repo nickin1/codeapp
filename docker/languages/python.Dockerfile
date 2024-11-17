@@ -9,4 +9,4 @@ USER coderunner
 
 WORKDIR /home/coderunner
 # Set the command to run Python scripts
-CMD ["python3", "code.py"] 
+CMD ["python3", "-u", "code.py"] 
