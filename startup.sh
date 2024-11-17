@@ -39,15 +39,18 @@ for COMMAND in "${REQUIRED_COMMANDS[@]}"; do
     fi
 done
 
+# Build Docker images
+echo "Building Docker images..."
+docker build -t scriptorium-base -f docker/base.Dockerfile .
+for lang in docker/languages/*.Dockerfile; do
+    name=$(basename "$lang" .Dockerfile)
+    docker build -t "scriptorium-$name" -f "$lang" .
+done
+
 # Create an admin user
 echo "Creating admin user..."
 npx prisma db seed 
 
 echo "admin email: admin@example.com, password: adminPassword123"
-
-# Generate API documentation (optional)
-# Uncomment if you are using a package for automatic API documentation generation
-# echo "Generating API documentation..."
-# npm run generate-docs  # Adjust based on your setup
 
 echo "Startup script completed successfully."

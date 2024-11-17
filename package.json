@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@prisma/client": "^5.21.1",
+    "@types/dockerode": "^3.3.31",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
+    "dockerode": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
     "next": "15.0.1",
     "react": "19.0.0-rc-69d4b800-20241021",

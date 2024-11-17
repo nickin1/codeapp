@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
-import CodeEditor from '@/app/components/CodeEditor';
+import dynamic from 'next/dynamic';
 import LanguageSelect from '@/app/components/LanguageSelect';
 import ExecutionOutput from '@/app/components/ExecutionOutput';
 import SaveTemplateModal from '@/app/components/SaveTemplateModal';
 import Button from '@/app/components/ui/Button';
+import { DEFAULT_CODE } from '@/lib/defaultCode';
 
 interface OutputItem {
     type: 'error' | 'stdout' | 'stderr' | 'status';
     data: string;
 }
+
+const CodeEditor = dynamic(() => import('@/app/components/CodeEditor'), {
+    ssr: false
+});
 
 export default function EditorPage() {
     const { user } = useAuth();
@@ -21,6 +26,10 @@ export default function EditorPage() {
     const [isExecuting, setIsExecuting] = useState(false);
     const [output, setOutput] = useState<OutputItem[]>([]);
     const [showSaveModal, setShowSaveModal] = useState(false);
+
+    useEffect(() => {
+        setCode(DEFAULT_CODE[language] || '// Start coding here');
+    }, [language]);
 
     const handleExecute = async () => {
         setIsExecuting(true);

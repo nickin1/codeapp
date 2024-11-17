@@ -82,9 +82,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 method: 'POST',
                 credentials: 'include',
             });
-            setUser(null);
             localStorage.removeItem('accessToken');
-            router.push('/');
+            setUser(null);
+            setTimeout(() => {
+                router.push('/');
+            }, 0);
         } catch (error) {
             console.error('Error logging out:', error);
         }

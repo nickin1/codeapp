@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import { useTheme } from '@/app/context/ThemeContext';
+import { getLanguageById } from '@/lib/languages';
 
 interface CodeEditorProps {
     value: string;
@@ -19,7 +20,7 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
         if (editorRef.current) {
             monacoEditorRef.current = monaco.editor.create(editorRef.current, {
                 value,
-                language,
+                language: getMonacoLanguage(language),
                 theme: theme === 'dark' ? 'vs-dark' : 'vs-light',
                 automaticLayout: true,
                 minimap: { enabled: false },
@@ -55,12 +56,28 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
 
     useEffect(() => {
         if (monacoEditorRef.current) {
-            monaco.editor.setModelLanguage(
-                monacoEditorRef.current.getModel()!,
-                language
-            );
+            const model = monacoEditorRef.current.getModel();
+            if (model) {
+                monaco.editor.setModelLanguage(model, getMonacoLanguage(language));
+            }
         }
     }, [language]);
+
+    const getMonacoLanguage = (langId: string): string => {
+        const monacoMap: { [key: string]: string } = {
+            python: 'python',
+            javascript: 'javascript',
+            typescript: 'typescript',
+            cpp: 'cpp',
+            c: 'c',
+            java: 'java',
+            rust: 'rust',
+            go: 'go',
+            racket: 'scheme',
+            ruby: 'ruby'
+        };
+        return monacoMap[langId] || langId;
+    };
 
     return (
         <div ref={editorRef} className="h-[500px] border rounded-md overflow-hidden dark:border-gray-700" />
