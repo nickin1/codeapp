@@ -46,6 +46,7 @@ export default async function handler(req, res) {
                 firstName: storedToken.user.firstName,
                 lastName: storedToken.user.lastName,
                 avatar: storedToken.user.avatar,
+                isAdmin: storedToken.user.isAdmin,
             }
         });
     }

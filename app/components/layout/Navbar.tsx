@@ -6,9 +6,11 @@ import Button from '../ui/Button';
 import UserDropdown from './UserDropdown';
 import ThemeToggle from './ThemeToggle';
 import SearchBar from './SearchBar';
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function Navbar() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { user } = useAuth();
 
     return (
         <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -33,6 +35,14 @@ export default function Navbar() {
                             <Link href="/blog" className="nav-link">
                                 Blog
                             </Link>
+                            {user?.isAdmin && (
+                                <Link
+                                    href="/admin"
+                                    className="nav-link"
+                                >
+                                    Admin Panel
+                                </Link>
+                            )}
                         </div>
                     </div>
 
@@ -69,6 +79,14 @@ export default function Navbar() {
                         <Link href="/blog" className="mobile-nav-link">
                             Blog
                         </Link>
+                        {user?.isAdmin && (
+                            <Link
+                                href="/admin"
+                                className="mobile-nav-link"
+                            >
+                                Admin Panel
+                            </Link>
+                        )}
                     </div>
                 </div>
             )}

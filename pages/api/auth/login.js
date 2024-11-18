@@ -53,6 +53,7 @@ export default async function handler(req, res) {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 avatar: user.avatar,
+                isAdmin: user.isAdmin,
             },
             accessToken,
         });
