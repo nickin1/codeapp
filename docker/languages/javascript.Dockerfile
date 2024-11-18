@@ -8,4 +8,4 @@ RUN apt-get update && apt-get install -y \
 USER coderunner
 
 WORKDIR /home/coderunner/code
-CMD ["node", "code.js"] 
+CMD ["bash", "-c", "node code.js < input.txt"] 

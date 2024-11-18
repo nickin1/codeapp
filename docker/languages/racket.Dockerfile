@@ -10,4 +10,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["racket", "code.rkt"] 
+CMD ["bash", "-c", "racket code.rkt < input.txt"] 

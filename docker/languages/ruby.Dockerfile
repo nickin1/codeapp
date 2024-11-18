@@ -10,4 +10,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["ruby", "code.rb"] 
+CMD ["bash", "-c", "ruby code.rb < input.txt"] 

@@ -61,6 +61,12 @@ export class DockerExecutor {
                 await fs.writeFile(inputFile, input);
                 console.log('Input file written to:', inputFile);
             }
+            else {
+                console.log('No input provided, writing empty input file...');
+                const inputFile = path.join(tempPath, 'input.txt');
+                await fs.writeFile(inputFile, '');
+                console.log('Empty input file written to:', inputFile);
+            }
 
             // Create container
             console.log('Creating Docker container...');
@@ -104,8 +110,9 @@ export class DockerExecutor {
             // Send input if provided
             if (input) {
                 console.log('Sending input to container...');
-                stream.write(input);
-                stream.end();
+                console.log('Input:', input);
+                stream.write(input + '\n');
+                // stream.end();
                 console.log('Input sent successfully');
             }
 

@@ -28,4 +28,4 @@ RUN echo '{ \
     } \
     }' > /home/coderunner/code/tsconfig.json
 
-CMD ["bash", "-c", "tsc code.ts && node code.js"] 
+CMD ["bash", "-c", "tsc code.ts && node code.js < input.txt"] 

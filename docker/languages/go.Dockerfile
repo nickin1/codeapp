@@ -10,4 +10,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "go build -o program code.go && ./program"] 
+CMD ["bash", "-c", "go build -o program code.go && ./program < input.txt"] 

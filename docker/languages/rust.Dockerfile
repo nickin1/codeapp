@@ -10,4 +10,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "rustc code.rs -o program && ./program"] 
+CMD ["bash", "-c", "rustc code.rs -o program && ./program < input.txt"] 

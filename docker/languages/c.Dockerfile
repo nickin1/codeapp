@@ -12,4 +12,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "gcc code.c -o /home/coderunner/code/program && ./program"] 
+CMD ["bash", "-c", "gcc code.c -o program && ./program < input.txt"] 
