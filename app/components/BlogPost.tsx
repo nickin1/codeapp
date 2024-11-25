@@ -4,6 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import CommentSection from './CommentSection';
 import { formatDistance } from 'date-fns'
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypePrism from 'rehype-prism-plus';
+import rehypeRaw from 'rehype-raw';
+import 'prismjs/themes/prism-tomorrow.css';
 
 
 // Define Comment type separately to handle recursion
@@ -107,7 +112,15 @@ export default function BlogPost({ post, onUpdate }: BlogPostProps) {
                 {/* Post content */}
                 <div className="flex-1">
                     <h2 className="text-xl font-bold mb-2">{post.title}</h2>
-                    <p className="text-gray-600 mb-4">{post.content}</p>
+                    <div className="prose prose-lg dark:prose-invert max-w-none mb-4">
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw, [rehypePrism, { showLineNumbers: true }]]}
+                            className="markdown-content"
+                        >
+                            {post.content}
+                        </ReactMarkdown>
+                    </div>
 
                     {/* Tags */}
                     <div className="flex gap-2 mb-4">

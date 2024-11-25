@@ -5,6 +5,8 @@ import { formatDistance } from 'date-fns';
 import CommentSection from './CommentSection';
 import { useAuth } from '../context/AuthContext';
 import type { BlogPost } from '../types/blog';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface BlogPostModalProps {
     post: BlogPost;
@@ -108,7 +110,9 @@ export default function BlogPostModal({ post, onClose, onUpdate }: BlogPostModal
 
                 {/* Content */}
                 <div className="prose dark:prose-invert max-w-none mb-6">
-                    <p className="text-gray-800 dark:text-gray-200">{post.content}</p>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {post.content}
+                    </ReactMarkdown>
                 </div>
 
                 {/* Tags */}
