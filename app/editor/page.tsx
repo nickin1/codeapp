@@ -113,6 +113,7 @@ export default function EditorPage() {
                     code={code}
                     language={language}
                     onClose={() => setShowSaveModal(false)}
+                    onSave={handleSaveTemplate}
                 />
             )}
         </main>
