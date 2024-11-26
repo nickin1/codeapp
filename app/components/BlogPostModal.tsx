@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import type { BlogPost } from '../types/blog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import BlogForm from './BlogForm';
 
 interface BlogPostModalProps {
     post: BlogPost;
@@ -14,15 +15,17 @@ interface BlogPostModalProps {
     onUpdate: () => void;
 }
 
-export default function BlogPostModal({ post, onClose, onUpdate }: BlogPostModalProps) {
+export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: BlogPostModalProps) {
     const { user } = useAuth();
-    const [votes, setVotes] = useState(post.votes);
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentPost, setCurrentPost] = useState(initialPost);
+    const [votes, setVotes] = useState(initialPost.votes);
 
     const handleVote = async (type: number) => {
         if (!user) return;
 
         try {
-            const response = await fetch(`/api/blogs/${post.id}/vote`, {
+            const response = await fetch(`/api/blogs/${currentPost.id}/vote`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,10 +76,41 @@ export default function BlogPostModal({ post, onClose, onUpdate }: BlogPostModal
                 {/* Header */}
                 <div className="flex justify-between items-start mb-4">
                     <div>
-                        <h2 className="text-2xl font-bold dark:text-white">{post.title}</h2>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Posted by {post.author.firstName} {post.author.lastName} •
-                            {formatDistance(new Date(post.createdAt), new Date(), { addSuffix: true })}
+                        <h2 className="text-2xl font-bold dark:text-white">{currentPost.title}</h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="text-sm text-gray-500">
+                                Posted by {currentPost.author.firstName} {currentPost.author.lastName} •
+                                {formatDistance(new Date(currentPost.createdAt), new Date(), { addSuffix: true })}
+                            </div>
+                            {user?.id === currentPost.authorId && (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                    >
+                                        Edit Post
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            if (window.confirm('Are you sure you want to delete this post?')) {
+                                                const response = await fetch(`/api/blogs/${currentPost.id}`, {
+                                                    method: 'DELETE',
+                                                    headers: {
+                                                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                                                    },
+                                                });
+                                                if (response.ok) {
+                                                    onClose();
+                                                    onUpdate();
+                                                }
+                                            }
+                                        }}
+                                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <button
@@ -111,13 +145,13 @@ export default function BlogPostModal({ post, onClose, onUpdate }: BlogPostModal
                 {/* Content */}
                 <div className="prose dark:prose-invert max-w-none mb-6">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {post.content}
+                        {currentPost.content}
                     </ReactMarkdown>
                 </div>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                    {post.tags.split(',').map((tag) => (
+                    {currentPost.tags.split(',').map((tag) => (
                         <span
                             key={tag}
                             className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-sm"
@@ -128,11 +162,11 @@ export default function BlogPostModal({ post, onClose, onUpdate }: BlogPostModal
                 </div>
 
                 {/* Templates (if any) */}
-                {post.templates && post.templates.length > 0 && (
+                {currentPost.templates && currentPost.templates.length > 0 && (
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold mb-2 dark:text-white">Related Templates</h3>
                         <div className="flex flex-wrap gap-2">
-                            {post.templates.map(template => (
+                            {currentPost.templates.map(template => (
                                 <span
                                     key={template.id}
                                     className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-200 px-2 py-1 rounded text-sm"
@@ -147,8 +181,30 @@ export default function BlogPostModal({ post, onClose, onUpdate }: BlogPostModal
                 {/* Comments Section */}
                 <div className="border-t dark:border-gray-700 pt-6">
                     <h3 className="text-lg font-semibold mb-4 dark:text-white">Comments</h3>
-                    <CommentSection postId={post.id} onUpdate={onUpdate} />
+                    <CommentSection postId={currentPost.id} onUpdate={onUpdate} />
                 </div>
+
+                {/* Edit Modal */}
+                {isEditing && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div onClick={e => e.stopPropagation()} className="w-full max-w-2xl">
+                            <BlogForm
+                                post={currentPost}
+                                onClose={() => setIsEditing(false)}
+                                onSubmit={async () => {
+                                    // Fetch the updated post
+                                    const response = await fetch(`/api/blogs/${currentPost.id}`);
+                                    if (response.ok) {
+                                        const updatedPost = await response.json();
+                                        setCurrentPost(updatedPost);
+                                        setIsEditing(false);
+                                        onUpdate(); // Still update the parent component
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
