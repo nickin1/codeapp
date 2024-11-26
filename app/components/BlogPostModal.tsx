@@ -144,7 +144,10 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
 
                 {/* Content */}
                 <div className="prose dark:prose-invert max-w-none mb-6">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className="markdown-content"
+                    >
                         {currentPost.content}
                     </ReactMarkdown>
                 </div>

@@ -9,6 +9,8 @@ import Pagination from '../components/Pagination';
 import { formatDistance } from 'date-fns';
 import type { BlogPost } from '../types/blog';
 import { useDebounce } from '../hooks/useDebounce';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function BlogPage() {
     const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -186,10 +188,22 @@ export default function BlogPage() {
                                     ▼
                                 </button>
                             </div>
-                            <div className="flex-1" onClick={() => setSelectedPost(post)}>
-                                <h2 className="text-xl font-bold mb-2 dark:text-white">{post.title}</h2>
-                                <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">{post.content}</p>
-                                <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex-1 min-w-0" onClick={() => setSelectedPost(post)}>
+                                <h2 className="text-xl font-bold mb-2 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">
+                                    {post.title}
+                                </h2>
+                                <div className="h-[4.5rem] overflow-hidden relative mb-4">
+                                    <div className="prose dark:prose-invert max-w-none">
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            className="markdown-content"
+                                        >
+                                            {post.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-800 to-transparent" />
+                                </div>
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                     <span>
                                         By {post.author.firstName} {post.author.lastName}
                                     </span>
