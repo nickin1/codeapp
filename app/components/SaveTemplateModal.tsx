@@ -1,106 +1,126 @@
+'use client';
+
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea } from "@nextui-org/react";
+import { useAuth } from '@/app/context/AuthContext';
+import Button from '@/app/components/ui/Button';
 
 interface SaveTemplateModalProps {
     code: string;
     language: string;
     onClose: () => void;
-    onSave: (data: { title: string, description: string, tags: string }) => Promise<void>;
-    templateId?: string;
 }
 
-export default function SaveTemplateModal({ code, language, onClose, onSave, templateId }: SaveTemplateModalProps) {
+export default function SaveTemplateModal({
+    code,
+    language,
+    onClose,
+}: SaveTemplateModalProps) {
     const { user } = useAuth();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [tags, setTags] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user?.id) {
-            alert('You must be logged in to save templates');
-            return;
-        }
-        if (!title.trim()) {
-            alert('Title is required');
-            return;
-        }
+        if (!user) return;
 
-        setIsLoading(true);
-        
+        setIsSaving(true);
+        setError('');
+
         try {
-            if (templateId) {
-                const response = await fetch(`/api/templates/${templateId}/fork`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                    },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        newTitle: title,
-                        newDescription: description,
-                        newCode: code,
-                        newLanguage: language,
-                        newTags: tags
-                    }),
-                });
-                if (!response.ok) throw new Error('Failed to fork template');
-                alert('Template forked successfully!');
-                onClose();
-            } else {
-                await onSave({ title, description, tags });
+            console.log('userid: ', user.id);
+            console.log('accessToken: ', localStorage.getItem('accessToken'));
+            const response = await fetch('/api/templates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    code,
+                    language,
+                    tags: [...new Set(tags.split(',')
+                        .map(tag => tag.trim())
+                        .filter(tag => tag !== ''))]
+                        .join(','),
+                    authorId: user.id,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save template');
             }
+
+            onClose();
         } catch (error) {
-            console.error('Error saving template:', error);
-            alert('Failed to save template');
+            setError('Failed to save template. Please try again.');
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
     };
 
     return (
-        <Modal isOpen onClose={onClose}>
-            <ModalContent>
-                <form onSubmit={handleSubmit}>
-                    <ModalHeader>
-                        {templateId ? 'Fork Template' : 'Save as Template'}
-                    </ModalHeader>
-                    <ModalBody>
-                        <div className="space-y-4">
-                            <Input
-                                label="Title"
-                                placeholder="Enter template title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                required
-                            />
-                            <Textarea
-                                label="Description"
-                                placeholder="Enter template description"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                            />
-                            <Input
-                                label="Tags"
-                                placeholder="Enter comma-separated tags"
-                                value={tags}
-                                onChange={(e) => setTags(e.target.value)}
-                            />
-                        </div>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button color="danger" variant="light" onPress={onClose}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+                <h2 className="text-2xl font-bold mb-4">Save as Template</h2>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                        <div className="text-red-500 text-sm">{error}</div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Title
+                        </label>
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            required
+                            className="w-full rounded-md border bg-transparent px-3 py-2"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Description
+                        </label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            required
+                            className="w-full rounded-md border bg-transparent px-3 py-2 h-32"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Tags (comma-separated)
+                        </label>
+                        <input
+                            type="text"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            className="w-full rounded-md border bg-transparent px-3 py-2"
+                            placeholder="e.g., algorithms, sorting, recursion"
+                        />
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="secondary" onClick={onClose}>
                             Cancel
                         </Button>
-                        <Button color="primary" type="submit" isLoading={isLoading}>
-                            {templateId ? 'Fork Template' : 'Save Template'}
+                        <Button type="submit" isLoading={isSaving}>
+                            Save Template
                         </Button>
-                    </ModalFooter>
+                    </div>
                 </form>
-            </ModalContent>
-        </Modal>
+            </div>
+        </div>
     );
-}
+} 

@@ -60,8 +60,8 @@ export default function EditorPage() {
             }
 
             setShowSaveModal(false);
-        alert('Template saved successfully!');
-        window.location.href = '/templates';
+            alert('Template saved successfully!');
+            window.location.href = '/templates';
         } catch (error) {
             console.error('Error saving template:', error);
             alert('Failed to save template');
@@ -150,7 +150,7 @@ export default function EditorPage() {
                     code={code}
                     language={language}
                     onClose={() => setShowSaveModal(false)}
-                    onSave={handleSaveTemplate}
+                // onSave={handleSaveTemplate}
                 />
             )}
         </main>
