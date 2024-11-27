@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Form from '../components/ui/Form';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 const colorOptions = {
     yellow: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAABmJLR0QA/wD/AP+gvaeTAAACGUlEQVR4nO3TsQ2AMADAsNL+/xC3IdEHqqww2BdkyfXc6x3A0fw6AP7MIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDALBIBAMAsEgEAwCwSAQDAJhAyfSBEga26+EAAAAAElFTkSuQmCC",
@@ -18,9 +18,38 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [selectedColor, setSelectedColor] = useState<string>('blue');
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!user) {
+            router.push('/login');
+        } else if (!user.phoneNumber) {
+            fetchUserProfile();
+        }
+    }, [user, router]);
+
+    async function fetchUserProfile() {
+        try {
+            const res = await fetch(`/api/profile?userId=${user?.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to fetch profile');
+            }
+
+            setUser(data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch profile');
+        }
+    }
 
     if (!user) {
-        redirect('/login');
+        return null;
     }
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -105,6 +134,7 @@ export default function ProfilePage() {
                         type="tel"
                         defaultValue={user.phoneNumber || ''}
                     />
+
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             Avatar Color

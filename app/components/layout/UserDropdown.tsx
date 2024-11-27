@@ -1,13 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Button from '../ui/Button';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function UserDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const { user, logout } = useAuth();
+    const router = useRouter();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    const handleLogout = async () => {
+        await logout();
+        setIsOpen(false);
+        router.push('/login');
+    };
 
     if (!user) {
         return (
@@ -23,7 +48,7 @@ export default function UserDropdown() {
     }
 
     return (
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -49,13 +74,7 @@ export default function UserDropdown() {
                         <Link href="/profile" className="dropdown-item">
                             Profile
                         </Link>
-                        <Link href="/templates" className="dropdown-item">
-                            My Templates
-                        </Link>
-                        <Link href="/blog/my-posts" className="dropdown-item">
-                            My Posts
-                        </Link>
-                        <button onClick={logout} className="dropdown-item-danger">
+                        <button onClick={handleLogout} className="dropdown-item-danger">
                             Log out
                         </button>
                     </div>
