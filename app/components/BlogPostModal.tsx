@@ -150,7 +150,7 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                             {user?.isAdmin && (
                                 <button
                                     onClick={() => handleHideContent(currentPost.id, 'blogPost', !currentPost.hidden)}
-                                    className={`px-3 py-1 rounded ${currentPost.hidden
+                                    className={`ml-4 px-3 py-1 rounded ${currentPost.hidden
                                         ? 'bg-green-500 hover:bg-green-600'
                                         : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
                                 >

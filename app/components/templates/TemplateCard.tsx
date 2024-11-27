@@ -63,8 +63,8 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
     );
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md h-64 flex flex-col">
-            <div className="p-4 flex-grow">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col h-full">
+            <div className="p-4 flex-1 overflow-hidden">
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
                         {template.title}
@@ -90,7 +90,7 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
                     )}
                 </div>
                 {template.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 overflow-y-auto max-h-24">
                         {template.description}
                     </p>
                 )}
@@ -109,7 +109,7 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
                 </div>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+            <div className="border-t border-gray-200 dark:border-gray-700 p-4 mt-auto">
                 <button
                     onClick={handleViewInEditor}
                     className="w-3/4 mx-auto block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
