@@ -28,18 +28,23 @@ export default function UserDropdown() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-                <img
-                    className="h-8 w-8 rounded-full"
-                    src={user.avatar || '/placeholder-avatar.png'}
-                    alt={`${user.firstName}'s avatar`}
-                />
+                <div className="w-8 h-8 flex-shrink-0">
+                    <img
+                        className="w-full h-full rounded-full object-cover"
+                        src={user.avatar || '/placeholder-avatar.png'}
+                        alt={`${user.firstName}'s avatar`}
+                    />
+                </div>
                 <span className="hidden md:block">
+                    {user.firstName} {user.lastName}
+                </span>
+                <span className="block md:hidden">
                     {user.firstName} {user.lastName}
                 </span>
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
                     <div className="py-1">
                         <Link href="/profile" className="dropdown-item">
                             Profile
@@ -50,7 +55,7 @@ export default function UserDropdown() {
                         <Link href="/blog/my-posts" className="dropdown-item">
                             My Posts
                         </Link>
-                        <button onClick={logout} className="dropdown-item text-red-600">
+                        <button onClick={logout} className="dropdown-item-danger">
                             Log out
                         </button>
                     </div>

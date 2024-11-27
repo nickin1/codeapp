@@ -26,7 +26,7 @@ export default function ThemeToggle() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"
+                        d="M12 3v3m0 12v3M3 12h3m12 0h3m-9 3a3 3 0 100-6 3 3 0 000 6zM5.636 5.636l2.122 2.122m8.484 8.484l2.122 2.122M5.636 18.364l2.122-2.122m8.484-8.484l2.122-2.122"
                     />
                 </svg>
             )}
