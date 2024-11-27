@@ -19,7 +19,7 @@ interface Template {
   updatedAt: Date;
 }
 
-export default function Templates() {
+export default function Templates( userOnly = false ) {
   const { user } = useAuth();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,13 +29,19 @@ export default function Templates() {
 
   useEffect(() => {
     fetchTemplates();
-  }, [user, searchTerm, currentPage]);
+  }, [user, searchTerm, currentPage, userOnly]); // Add missing dependencies
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch(
-        `/api/templates/search?userId=${user?.id}&searchTerm=${searchTerm}&page=${currentPage}`
-      );
+      const endpoint = userOnly 
+        ? `/api/templates/user/${user?.id}`
+        : `/api/templates/search?userId=${user?.id}&searchTerm=${searchTerm}&page=${currentPage}`;
+            
+      const response = await fetch(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setTemplates(data.templates);
@@ -53,7 +59,10 @@ export default function Templates() {
 
     try {
       const response = await fetch(`/api/templates/${templateId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
       });
 
       if (response.ok) {

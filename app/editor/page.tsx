@@ -31,6 +31,43 @@ export default function EditorPage() {
         setCode(DEFAULT_CODE[language] || '// Start coding here');
     }, [language]);
 
+    const handleSaveTemplate = async (data: { title: string, description: string, tags: string }) => {
+        if (!user) {
+            alert('You must be logged in to save templates');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/templates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                },
+                body: JSON.stringify({
+                    ...data,
+                    code,
+                    language,
+                    authorId: user.id,
+                    forked: false
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to save template');
+            }
+
+            setShowSaveModal(false);
+        alert('Template saved successfully!');
+        window.location.href = '/templates';
+        } catch (error) {
+            console.error('Error saving template:', error);
+            alert('Failed to save template');
+        }
+    };
+
     const handleExecute = async () => {
         setIsExecuting(true);
         setOutput([]);

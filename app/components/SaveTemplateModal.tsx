@@ -10,7 +10,7 @@ interface SaveTemplateModalProps {
     templateId?: string;
 }
 
-export default function SaveTemplateModal({ code, language, onClose, onSave,templateId }: SaveTemplateModalProps) {
+export default function SaveTemplateModal({ code, language, onClose, onSave, templateId }: SaveTemplateModalProps) {
     const { user } = useAuth();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -23,44 +23,36 @@ export default function SaveTemplateModal({ code, language, onClose, onSave,temp
             alert('You must be logged in to save templates');
             return;
         }
+        if (!title.trim()) {
+            alert('Title is required');
+            return;
+        }
 
         setIsLoading(true);
         
         try {
-            await onSave({ title, description, tags });
-            
-            const endpoint = templateId 
-                ? `/api/templates/${templateId}/fork`
-                : '/api/templates';
-
-            const body = templateId ? {
-                userId: user.id,
-                newTitle: title,
-                newDescription: description,
-                newCode: code,
-                newLanguage: language,
-                newTags: tags
-            } : {
-                title,
-                description,
-                code,
-                language,
-                tags,
-                authorId: user.id
-            };
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
-
-            if (!response.ok) throw new Error('Failed to save template');
-            
-            alert(templateId ? 'Template forked successfully!' : 'Template saved successfully!');
-            onClose();
+            if (templateId) {
+                const response = await fetch(`/api/templates/${templateId}/fork`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        newTitle: title,
+                        newDescription: description,
+                        newCode: code,
+                        newLanguage: language,
+                        newTags: tags
+                    }),
+                });
+                if (!response.ok) throw new Error('Failed to fork template');
+                alert('Template forked successfully!');
+                onClose();
+            } else {
+                await onSave({ title, description, tags });
+            }
         } catch (error) {
             console.error('Error saving template:', error);
             alert('Failed to save template');
