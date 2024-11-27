@@ -199,7 +199,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                                 placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
-                                className="w-full p-2 border rounded mb-2"
+                                className="w-full p-2 border rounded mb-2 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
                                 rows={3}
                             />
                             <div className="flex justify-end gap-2">
