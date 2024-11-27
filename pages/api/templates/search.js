@@ -47,6 +47,12 @@ export default async function handler(req, res) {
                 take,
                 include: {
                     author: true,
+                    blogPosts: {
+                        select: {
+                            id: true,
+                            title: true
+                        }
+                    }
                 },
             });
 

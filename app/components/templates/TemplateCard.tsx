@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import EditTemplateModal from '../EditTemplateModal';
+import BlogPostsPopup from './BlogPostsPopup';
 
 interface TemplateCardProps {
     template: {
@@ -19,6 +20,10 @@ interface TemplateCardProps {
         forked: boolean;
         createdAt: Date;
         updatedAt: Date;
+        blogPosts: Array<{
+            id: string;
+            title: string;
+        }>;
     };
     onDelete?: (id: string) => void;
     onUpdate?: () => void;
@@ -27,6 +32,7 @@ interface TemplateCardProps {
 export default function TemplateCard({ template, onDelete, onUpdate }: TemplateCardProps) {
     const { user } = useAuth();
     const router = useRouter();
+    const [showBlogPosts, setShowBlogPosts] = useState(false);
 
     const handleViewInEditor = () => {
         router.push(`/editor?templateId=${template.id}`);
@@ -34,18 +40,43 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
 
     const isOwner = user?.id === template.authorId;
 
+    const blogPostsButton = (
+        <div className="relative">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setShowBlogPosts(!showBlogPosts);
+                }}
+                onBlur={() => setTimeout(() => setShowBlogPosts(false), 200)}
+                className={`px-2 py-1 text-xs rounded-full ${template.blogPosts.length > 0
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                    }`}
+            >
+                {template.blogPosts.length} Blog Post{template.blogPosts.length !== 1 ? 's' : ''}
+            </button>
+            <BlogPostsPopup
+                blogPosts={template.blogPosts}
+                isVisible={showBlogPosts}
+            />
+        </div>
+    );
+
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col h-64">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md h-64 flex flex-col">
             <div className="p-4 flex-grow">
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
                         {template.title}
                     </h3>
-                    {template.forked && (
-                        <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
-                            Forked
-                        </span>
-                    )}
+                    <div className="flex items-center gap-2 relative">
+                        {template.forked && (
+                            <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                                Forked
+                            </span>
+                        )}
+                        {blogPostsButton}
+                    </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <span>by {template.author

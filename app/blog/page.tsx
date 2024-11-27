@@ -11,6 +11,7 @@ import type { BlogPost } from '../types/blog';
 import { useDebounce } from '../hooks/useDebounce';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function BlogPage() {
     const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -22,7 +23,28 @@ export default function BlogPage() {
     const [isCreating, setIsCreating] = useState(false);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
+    const searchParams = useSearchParams();
+    const postId = searchParams?.get('postId');
     const [sortBy, setSortBy] = useState('dateDesc'); // Options: dateDesc, dateAsc, scoreDesc, scoreAsc
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchPostFromId = async () => {
+            if (!postId) return;
+
+            try {
+                const response = await fetch(`/api/blogs/${postId}`);
+                if (!response.ok) throw new Error('Failed to fetch post');
+
+                const post = await response.json();
+                setSelectedPost(post);
+            } catch (error) {
+                console.error('Error fetching post:', error);
+            }
+        };
+
+        fetchPostFromId();
+    }, [postId]);
 
     const fetchPosts = async () => {
         try {
@@ -118,6 +140,18 @@ export default function BlogPage() {
         });
     };
 
+    const handleCloseModal = () => {
+        setSelectedPost(null);
+        // Remove postId from URL when closing modal
+        router.push('/blog');
+    };
+
+    const handleSelectPost = (post: BlogPost) => {
+        setSelectedPost(post);
+        // Add postId to URL when opening modal
+        router.push(`/blog?postId=${post.id}`);
+    };
+
     return (
         <div className="container mx-auto px-4 py-8 max-w-5xl">
             <div className="flex justify-between items-center mb-6">
@@ -188,7 +222,7 @@ export default function BlogPage() {
                                     ▼
                                 </button>
                             </div>
-                            <div className="flex-1 min-w-0" onClick={() => setSelectedPost(post)}>
+                            <div className="flex-1 min-w-0" onClick={() => handleSelectPost(post)}>
                                 <h2 className="text-xl font-bold mb-2 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">
                                     {post.title}
                                 </h2>
@@ -230,7 +264,7 @@ export default function BlogPage() {
             {selectedPost && (
                 <BlogPostModal
                     post={selectedPost}
-                    onClose={() => setSelectedPost(null)}
+                    onClose={handleCloseModal}
                     onUpdate={fetchPosts}
                 />
             )}

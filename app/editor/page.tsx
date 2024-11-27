@@ -194,10 +194,13 @@ export default function EditorPage() {
     };
 
     const handleExitTemplateView = () => {
+        if (!confirm('Are you sure you want to exit the template view? Any unsaved changes will be lost.')) {
+            return;
+        }
+
         setIsEditingTemplate(false);
         setTemplateData(null);
         setCode(DEFAULT_CODE[language] || '// Start coding here');
-        // Clear the URL parameter without a full page refresh
         window.history.pushState({}, '', '/editor');
     };
 
@@ -222,15 +225,12 @@ export default function EditorPage() {
                 )}
 
                 <div className="flex justify-between items-center">
-                    <LanguageSelect
-                        value={language}
-                        onChange={setLanguage}
-                        disabled={isEditingTemplate && !templateActions.canEdit}
-                    />
-                    <div className="space-x-2">
-                        <Button onClick={handleExecute} isLoading={isExecuting}>
-                            Run Code
-                        </Button>
+                    <div className="flex items-center space-x-2">
+                        <LanguageSelect
+                            value={language}
+                            onChange={setLanguage}
+                            disabled={isEditingTemplate && !templateActions.canEdit}
+                        />
                         {isEditingTemplate && (
                             <Button
                                 variant="secondary"
@@ -239,6 +239,11 @@ export default function EditorPage() {
                                 Exit Template View
                             </Button>
                         )}
+                    </div>
+                    <div className="space-x-2">
+                        <Button onClick={handleExecute} isLoading={isExecuting}>
+                            Run Code
+                        </Button>
                         {user && (
                             <>
                                 {isEditingTemplate ? (
