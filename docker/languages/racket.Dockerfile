@@ -10,4 +10,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "racket code.rkt < input.txt"] 
+CMD ["timeout", "10", "bash", "-c", "stdbuf -o0 racket code.rkt < input.txt"] 

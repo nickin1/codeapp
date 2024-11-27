@@ -128,11 +128,12 @@ export class DockerExecutor {
                 const timeoutId = setTimeout(async () => {
                     console.log('Execution timeout reached');
                     try {
-                        await container.kill();
-                        if (onOutput) {
-                            onOutput('stderr', 'Execution timeout');
-                        }
-                        reject(new Error('Execution timeout'));
+                        // await container.stop({ t: 0 });  // t: 0 means don't wait
+                        await container.kill({ signal: 'SIGTERM' });
+                        // if (onOutput) {
+                        //     onOutput('stderr', 'Execution timeout');
+                        // }
+                        // reject(new Error('Execution timeout'));
                     } catch (error) {
                         console.error('Error killing container:', error);
                     }
@@ -206,6 +207,9 @@ export class DockerExecutor {
                         case 137:
                             terminationReason = `Process terminated: Memory limit exceeded (512MB)`;
                             break;
+                        case 124:
+                            terminationReason = `Process terminated: Execution timeout (10s)`;
+                            break;
                         case 139:
                             terminationReason = `Process terminated: Segmentation fault`;
                             break;
@@ -213,7 +217,7 @@ export class DockerExecutor {
                             terminationReason = `Process terminated: Program aborted`;
                             break;
                         case 0:
-                            terminationReason = ``;
+                            terminationReason = `Process completed successfully`;
                             break;
                         default:
                             terminationReason = `Process terminated with exit code ${exitCode}`;

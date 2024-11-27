@@ -2,7 +2,7 @@ FROM scriptorium-base:latest
 
 USER root
 
-# Install Node.js 18.x
+# Install Node.js 18.x and timeout
 RUN apt-get update && \
     apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
@@ -28,4 +28,4 @@ RUN echo '{ \
     } \
     }' > /home/coderunner/code/tsconfig.json
 
-CMD ["bash", "-c", "tsc code.ts && node code.js < input.txt"] 
+CMD ["timeout", "10", "bash", "-c", "tsc code.ts && node code.js < input.txt"] 
