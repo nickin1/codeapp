@@ -125,9 +125,9 @@ export default function BlogPage() {
         return [...posts].sort((a, b) => {
             switch (sortBy) {
                 case 'dateDesc':
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    return new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf();
                 case 'dateAsc':
-                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                    return new Date(a.createdAt).valueOf() - new Date(b.createdAt).valueOf();
                 case 'scoreDesc':
                     const scoreB = b.votes.reduce((acc, vote) => acc + vote.type, 0);
                     const scoreA = a.votes.reduce((acc, vote) => acc + vote.type, 0);

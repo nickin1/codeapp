@@ -22,6 +22,8 @@ export interface BlogPost {
     author: {
         name: string;
         email: string;
+        firstName: string;
+        lastName: string;
     };
     comments: Comment[];
     tags: string;
@@ -31,6 +33,7 @@ export interface BlogPost {
         title: string;
         language: string;
     }[];
+    votes: Vote[];
 }
 
 export interface BlogPostReport {
@@ -67,4 +70,12 @@ export interface PaginatedResponse<T> {
         currentPage: number;
         totalPages: number;
     };
+}
+
+export interface Vote {
+    id: string;
+    type: number;
+    userId: string;
+    blogPostId: string;
+    createdAt: Date;
 }
