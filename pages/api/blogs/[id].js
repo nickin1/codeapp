@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { authorizeRequestNoUserID } from '../../../lib/authorization';
+import { authorizeRequestNoUserID, authorizeRequest } from '../../../lib/authorization';
 
 const prisma = new PrismaClient();
 
@@ -172,27 +172,36 @@ export default async function handler(req, res) {
         }
     }
     else if (req.method === "DELETE") {
+        console.log(`Attempting to delete blog post with id: ${id}`);
         try {
             const blogPost = await prisma.blogPost.findUnique({
                 where: { id },
             });
 
             if (!blogPost) {
+                console.log(`Blog post with id ${id} not found`);
                 return res.status(404).json({ error: "Blog post not found" });
             }
 
+            console.log(`Found blog post:`, blogPost);
+
             // Authorization check
             const authResult = await authorizeRequest(req, blogPost.authorId);
+            console.log(`Authorization result:`, authResult);
             if (!authResult.authorized) {
+                console.log(`Authorization failed for user trying to delete blog post ${id}`);
                 return res.status(403).json({ error: authResult.error });
             }
 
+            console.log(`Deleting blog post ${id}...`);
             const deletedBlogPost = await prisma.blogPost.delete({
                 where: { id }
             });
 
+            console.log(`Successfully deleted blog post:`, deletedBlogPost);
             return res.status(200).json(deletedBlogPost);
         } catch (error) {
+            console.error(`Error deleting blog post ${id}:`, error);
             if (error.code === "P2025") {
                 res.status(404).json({ error: "Blog post not found" });
             } else {
