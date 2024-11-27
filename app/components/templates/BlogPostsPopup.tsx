@@ -13,7 +13,7 @@ export default function BlogPostsPopup({ blogPosts, isVisible }: BlogPostsPopupP
     if (!isVisible || blogPosts.length === 0) return null;
 
     return (
-        <div className="absolute z-50 right-0 mt-1 w-64 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="fixed z-50 mt-1 w-64 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
             <div className="py-1 max-h-48 overflow-y-auto">
                 <div className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Referenced in Blog Posts:
