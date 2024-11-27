@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { formatDistance } from 'date-fns';
 import type { Comment } from '../types/blog';
+import ReportModal from './ReportModal';
 
 interface CommentSectionProps {
     postId: string;
@@ -16,6 +17,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
     const [error, setError] = useState<string | null>(null);
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState<string | null>(null);
+    const [reportingComment, setReportingComment] = useState<string | null>(null);
     const { user } = useAuth();
 
     const fetchComments = async () => {
@@ -249,6 +251,14 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                                 Reply
                             </button>
                         )}
+                        {user && (
+                            <button
+                                onClick={() => setReportingComment(`${postId}-${comment.id}`)}
+                                className="text-sm text-red-500 ml-2 hover:text-red-600"
+                            >
+                                Report
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -314,6 +324,15 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                         )}
                     </div>
                 </>
+            )}
+
+            {reportingComment && (
+                <ReportModal
+                    contentId={reportingComment}
+                    contentType="comment"
+                    onClose={() => setReportingComment(null)}
+                    onSubmit={onUpdate}
+                />
             )}
         </div>
     );

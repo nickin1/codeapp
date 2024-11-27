@@ -8,6 +8,7 @@ import type { BlogPost } from '../types/blog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import BlogForm from './BlogForm';
+import ReportModal from './ReportModal';
 
 interface BlogPostModalProps {
     post: BlogPost;
@@ -20,6 +21,7 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
     const [isEditing, setIsEditing] = useState(false);
     const [currentPost, setCurrentPost] = useState(initialPost);
     const [votes, setVotes] = useState(initialPost.votes);
+    const [showReportModal, setShowReportModal] = useState(false);
 
     const handleVote = async (type: number) => {
         if (!user) return;
@@ -184,6 +186,14 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                     >
                         ▼
                     </button>
+                    {user && (
+                        <button
+                            onClick={() => setShowReportModal(true)}
+                            className="text-red-500 hover:text-red-600 text-sm"
+                        >
+                            Report
+                        </button>
+                    )}
                 </div>
 
                 {/* Content */}
@@ -251,6 +261,15 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                             />
                         </div>
                     </div>
+                )}
+
+                {showReportModal && (
+                    <ReportModal
+                        contentId={currentPost.id}
+                        contentType="blogPost"
+                        onClose={() => setShowReportModal(false)}
+                        onSubmit={onUpdate}
+                    />
                 )}
             </div>
         </div>
