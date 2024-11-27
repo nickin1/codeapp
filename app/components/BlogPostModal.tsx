@@ -61,6 +61,27 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
         }
     };
 
+    const handleHideContent = async (contentId: string, contentType: string, hide: boolean) => {
+        try {
+            const response = await fetch('/api/admin/hide-content', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ contentId, contentType, hide }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update content visibility');
+            }
+
+            onUpdate();
+        } catch (error) {
+            console.error('Error updating content visibility:', error);
+        }
+    };
+
     const score = votes.reduce((acc, vote) => acc + vote.type, 0);
     const userVote = user ? votes.find(vote => vote.userId === user.id)?.type : 0;
 
@@ -76,7 +97,12 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                 {/* Header */}
                 <div className="flex justify-between items-start mb-4">
                     <div>
-                        <h2 className="text-2xl font-bold dark:text-white">{currentPost.title}</h2>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-2xl font-bold dark:text-white">{currentPost.title}</h2>
+                            {currentPost.hidden && (
+                                <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm">Hidden</span>
+                            )}
+                        </div>
                         <div className="flex items-center justify-between mb-4">
                             <div className="text-sm text-gray-500">
                                 Posted by {currentPost.author.firstName} {currentPost.author.lastName} •
@@ -86,7 +112,11 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                        disabled={currentPost.hidden}
+                                        className={`px-4 py-2 rounded transition-colors ${currentPost.hidden
+                                            ? 'bg-gray-300 cursor-not-allowed'
+                                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                                            }`}
                                     >
                                         Edit Post
                                     </button>
@@ -105,11 +135,25 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                                                 }
                                             }
                                         }}
-                                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                        disabled={currentPost.hidden}
+                                        className={`px-4 py-2 rounded transition-colors ${currentPost.hidden
+                                            ? 'bg-gray-300 cursor-not-allowed'
+                                            : 'bg-red-500 text-white hover:bg-red-600'
+                                            }`}
                                     >
                                         Delete
                                     </button>
                                 </div>
+                            )}
+                            {user?.isAdmin && (
+                                <button
+                                    onClick={() => handleHideContent(currentPost.id, 'blogPost', !currentPost.hidden)}
+                                    className={`px-3 py-1 rounded ${currentPost.hidden
+                                        ? 'bg-green-500 hover:bg-green-600'
+                                        : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
+                                >
+                                    {currentPost.hidden ? 'Unhide' : 'Hide'}
+                                </button>
                             )}
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { off } from 'process';
-import { authorizeRequest } from '../../../lib/authorization';
+import { authorizeRequest, authorizeRequestNoUserID } from '../../../lib/authorization';
 
 const prisma = new PrismaClient();
 
@@ -9,42 +9,46 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
         try {
-            const authResult = await authorizeRequest(req);
+            const authResult = await authorizeRequestNoUserID(req);
             const userId = authResult.userId;
 
+            console.log("isAdmin:", authResult.isAdmin);
+
+            let whereClause = {
+                OR: [
+                    { title: { contains: searchTerm || '' } },
+                    { content: { contains: searchTerm || '' } },
+                    { tags: { contains: searchTerm || '' } },
+                ]
+            };
+
+            if (!authResult.isAdmin) {
+                whereClause = {
+                    AND: [
+                        whereClause,
+                        {
+                            OR: [
+                                { hidden: false },
+                                { authorId: userId }
+                            ]
+                        }
+                    ]
+                };
+            }
+
             let blogPosts = await prisma.blogPost.findMany({
-                where: {
-                    OR: [
-                        {
-                            title: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            content: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            tags: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                    ],
-                },
+                where: whereClause,
                 include: {
                     votes: true,
                     author: true,
                 },
             });
 
-            // Calculate scores once for all blog posts
             blogPosts = blogPosts.map(post => ({
                 ...post,
                 score: post.votes.reduce((acc, vote) => acc + vote.type, 0)
             }));
 
-            // Sort based on the sortBy parameter
             switch (sortBy) {
                 case 'dateDesc':
                     blogPosts.sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf());
@@ -62,9 +66,9 @@ export default async function handler(req, res) {
                     blogPosts.sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf());
             }
 
-            // Paginate the results
             const paginatedResults = blogPosts.slice((page - 1) * limit, page * limit);
 
+            console.log(paginatedResults);
             return res.status(200).json({
                 totalPosts: blogPosts.length,
                 currentPage: Number(page),

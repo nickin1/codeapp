@@ -21,7 +21,12 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
     const fetchComments = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/blogs/${postId}`);
+            const accessToken = localStorage.getItem('accessToken');
+            const response = await fetch(`/api/blogs/${postId}`, {
+                headers: accessToken ? {
+                    'Authorization': `Bearer ${accessToken}`,
+                } : {}
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch comments');
             }
@@ -128,12 +133,65 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
         }
     };
 
+    const handleHideContent = async (contentId: string, contentType: string, hide: boolean) => {
+        try {
+            const response = await fetch('/api/admin/hide-content', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ contentId, contentType, hide }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update content visibility');
+            }
+
+            // Update the comments state locally
+            setComments(currentComments =>
+                currentComments.map(comment => {
+                    if (comment.id === contentId) {
+                        return { ...comment, hidden: hide };
+                    }
+                    // Check if children exist before recursing
+                    if (comment.children && comment.children.length > 0) {
+                        return {
+                            ...comment,
+                            children: updateCommentsRecursively(comment.children, contentId, hide)
+                        };
+                    }
+                    return comment;
+                })
+            );
+        } catch (error) {
+            console.error('Error updating content visibility:', error);
+        }
+    };
+
+    // Helper function to update nested comments
+    const updateCommentsRecursively = (comments: Comment[], contentId: string, hide: boolean): Comment[] => {
+        return comments.map(comment => {
+            if (comment.id === contentId) {
+                return { ...comment, hidden: hide };
+            }
+            // Check if children exist before recursing
+            if (comment.children && comment.children.length > 0) {
+                return {
+                    ...comment,
+                    children: updateCommentsRecursively(comment.children, contentId, hide)
+                };
+            }
+            return comment;
+        });
+    };
+
     const renderComment = (comment: Comment) => {
         const score = comment.votes.reduce((acc, vote) => acc + vote.type, 0);
         const userVote = user ? comment.votes.find(vote => vote.userId === user.id)?.type : 0;
 
         return (
-            <div key={comment.id} className="border-l-2 pl-4 mb-4">
+            <div key={comment.id} className={`border-l-2 pl-4 mb-4 ${comment.hidden ? 'opacity-60' : ''}`}>
                 <div className="flex items-start gap-2">
                     {/* Voting buttons */}
                     <div className="flex flex-col items-center">
@@ -156,11 +214,33 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
 
                     {/* Rest of comment content */}
                     <div className="flex-1">
-                        <div className="text-sm text-gray-500">
-                            {comment.author.firstName} {comment.author.lastName} •
-                            {formatDistance(new Date(comment.createdAt), new Date(), { addSuffix: true })}
+                        <div className="flex justify-between items-center">
+                            <div className="text-sm text-gray-500">
+                                {comment.author.firstName} {comment.author.lastName} •
+                                {formatDistance(new Date(comment.createdAt), new Date(), { addSuffix: true })}
+                                {comment.hidden && (
+                                    <span className="ml-2 text-red-500 text-xs">[Hidden]</span>
+                                )}
+                            </div>
+                            {user?.isAdmin && (
+                                <button
+                                    onClick={() => handleHideContent(comment.id, 'comment', !comment.hidden)}
+                                    className={`px-2 py-1 text-xs rounded ${comment.hidden
+                                        ? 'bg-green-500 hover:bg-green-600'
+                                        : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
+                                >
+                                    {comment.hidden ? 'Unhide' : 'Hide'}
+                                </button>
+                            )}
                         </div>
-                        <p className="mt-1">{comment.content}</p>
+                        <p className="mt-1">
+                            {comment.content}
+                            {comment.hidden && !user?.isAdmin && (
+                                <span className="text-gray-500 italic ml-2">
+                                    (This comment has been hidden by an admin)
+                                </span>
+                            )}
+                        </p>
                         {user && (
                             <button
                                 onClick={() => setReplyTo(comment.id)}

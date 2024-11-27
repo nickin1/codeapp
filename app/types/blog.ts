@@ -14,6 +14,7 @@ export interface Comment {
     };
     votes: Vote[];
     children?: Comment[];
+    hidden: boolean;
 }
 
 export interface BlogPost {

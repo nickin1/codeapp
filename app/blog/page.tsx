@@ -35,7 +35,12 @@ export default function BlogPage() {
             if (!postId) return;
 
             try {
-                const response = await fetch(`/api/blogs/${postId}`);
+                const accessToken = localStorage.getItem('accessToken');
+                const response = await fetch(`/api/blogs/${postId}`, {
+                    headers: accessToken ? {
+                        'Authorization': `Bearer ${accessToken}`,
+                    } : {}
+                });
                 if (!response.ok) throw new Error('Failed to fetch post');
 
                 const post = await response.json();
@@ -51,8 +56,14 @@ export default function BlogPage() {
     const fetchPosts = async () => {
         try {
             setLoading(true);
+            const accessToken = localStorage.getItem('accessToken');
             const response = await fetch(
-                `/api/blogs/search?searchTerm=${debouncedSearchTerm}&page=${currentPage}&limit=10&sortBy=${sortBy}`
+                `/api/blogs/search?searchTerm=${debouncedSearchTerm}&page=${currentPage}&limit=10&sortBy=${sortBy}`,
+                {
+                    headers: accessToken ? {
+                        'Authorization': `Bearer ${accessToken}`,
+                    } : {}
+                }
             );
             if (!response.ok) {
                 throw new Error('Failed to fetch posts');
@@ -131,6 +142,27 @@ export default function BlogPage() {
         router.push(`/blog?postId=${post.id}`);
     };
 
+    const handleHideContent = async (contentId: string, contentType: string, hide: boolean) => {
+        try {
+            const response = await fetch('/api/admin/hide-content', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ contentId, contentType, hide }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update content visibility');
+            }
+
+            fetchPosts();
+        } catch (error) {
+            console.error('Error updating content visibility:', error);
+        }
+    };
+
     return (
         <div className="container mx-auto px-4 py-8 max-w-5xl">
             <div className="flex justify-between items-center mb-6">
@@ -176,7 +208,7 @@ export default function BlogPage() {
 
             <div className="grid gap-6">
                 {!loading && posts.map((post) => (
-                    <div key={post.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                    <div key={post.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow ${post.hidden ? 'opacity-75' : ''}`}>
                         <div className="flex items-start gap-4">
                             <div className="flex flex-col items-center">
                                 <button
@@ -202,9 +234,14 @@ export default function BlogPage() {
                                 </button>
                             </div>
                             <div className="flex-1 min-w-0" onClick={() => handleSelectPost(post)}>
-                                <h2 className="text-xl font-bold mb-2 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">
-                                    {post.title}
-                                </h2>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <h2 className="text-xl font-bold dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">
+                                        {post.title}
+                                    </h2>
+                                    {post.hidden && (
+                                        <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">Hidden</span>
+                                    )}
+                                </div>
                                 <div className="h-[4.5rem] overflow-hidden relative mb-4">
                                     <div className="prose dark:prose-invert max-w-none">
                                         <ReactMarkdown
@@ -234,6 +271,19 @@ export default function BlogPage() {
                                         </span>
                                     ))}
                                 </div>
+                                {user?.isAdmin && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleHideContent(post.id, 'blogPost', !post.hidden);
+                                        }}
+                                        className={`px-3 py-1 rounded ${post.hidden
+                                            ? 'bg-green-500 hover:bg-green-600'
+                                            : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
+                                    >
+                                        {post.hidden ? 'Unhide' : 'Hide'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
