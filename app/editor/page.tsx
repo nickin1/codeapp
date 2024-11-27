@@ -47,6 +47,7 @@ export default function EditorPage() {
         canDelete: false,
         canFork: false,
     });
+    const [copyFeedback, setCopyFeedback] = useState(false);
 
     useEffect(() => {
         if (!isEditingTemplate) {
@@ -204,6 +205,13 @@ export default function EditorPage() {
         window.history.pushState({}, '', '/editor');
     };
 
+    const handleCopyLink = () => {
+        const link = `${window.location.origin}/editor?templateId=${templateId}`;
+        navigator.clipboard.writeText(link);
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+    };
+
     return (
         <main className="flex-1 p-4">
             <div className="max-w-7xl mx-auto space-y-4">
@@ -272,6 +280,12 @@ export default function EditorPage() {
                                                 Fork Template
                                             </Button>
                                         )}
+                                        <Button
+                                            variant="secondary"
+                                            onClick={handleCopyLink}
+                                        >
+                                            {copyFeedback ? 'Copied!' : 'Copy Link'}
+                                        </Button>
                                     </>
                                 ) : (
                                     <Button

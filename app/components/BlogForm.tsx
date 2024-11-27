@@ -86,10 +86,10 @@ export default function BlogForm({ post, onClose, onSubmit }: BlogFormProps) {
                         To link a template, use markdown format:
                     </p>
                     <code className="block bg-white dark:bg-gray-700 p-2 rounded">
-                        [template name](/editor?templateId=template-id)
+                        [template name](...copied link...)
                     </code>
                     <p className="text-gray-600 dark:text-gray-400 mt-2 text-xs">
-                        You can copy the template ID from the URL when viewing a template in the editor.
+                        You can copy the template's link when viewing a template in the editor.
                     </p>
                 </div>
             </div>
