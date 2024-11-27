@@ -28,11 +28,13 @@ export default async function handler(req, res) {
                     },
                     include: {
                         votes: true, // Include votes for each blog post
+                        author: true,
                     },
                 });
             }
             else {
                 // Retrieve relevant blog posts
+                console.log("searching for blog posts");
                 blogPosts = await prisma.blogPost.findMany({
                     where: {
                         OR: [
@@ -64,6 +66,7 @@ export default async function handler(req, res) {
                     },
                     include: {
                         votes: true, // Include votes for each blog post
+                        author: true,
                     },
                 });
             }

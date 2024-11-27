@@ -10,26 +10,48 @@ export default async function handler(req, res) {
         try {
 
             const blogPost = await prisma.blogPost.findUnique({
-                where: {
-                    id,
-                },
+                where: { id },
                 include: {
-                    author: {
-                        select: {
-                            id: true,
-                            firstName: true,
-                            lastName: true,
+                    author: true,
+                    votes: true,
+                    comments: {
+                        include: {
+                            author: true,
+                            votes: true,
                         }
                     },
-                    comments: true,
                     templates: true
-                },
+                }
             });
 
             if (!blogPost) {
                 return res.status(404).json({ error: "Blog post not found" });
             }
 
+            // Transform flat comments into a tree structure
+            const commentTree = [];
+            const commentMap = new Map();
+
+            // First, create a map of all comments
+            blogPost.comments.forEach(comment => {
+                commentMap.set(comment.id, { ...comment, children: [] });
+            });
+
+            // Then, build the tree structure
+            blogPost.comments.forEach(comment => {
+                const commentWithChildren = commentMap.get(comment.id);
+                if (comment.parentId === null) {
+                    commentTree.push(commentWithChildren);
+                } else {
+                    const parent = commentMap.get(comment.parentId);
+                    if (parent) {
+                        parent.children.push(commentWithChildren);
+                    }
+                }
+            });
+
+            // Replace flat comments with tree structure
+            blogPost.comments = commentTree;
 
             const authResult = await authorizeRequest(req, blogPost.authorId);
 
