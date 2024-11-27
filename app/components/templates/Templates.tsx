@@ -19,6 +19,10 @@ interface Template {
   forked: boolean;
   createdAt: Date;
   updatedAt: Date;
+  blogPosts: Array<{
+    id: string;
+    title: string;
+  }>;
 }
 
 interface TemplatesProps {

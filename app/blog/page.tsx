@@ -28,6 +28,8 @@ export default function BlogPage() {
     const [sortBy, setSortBy] = useState('dateDesc'); // Options: dateDesc, dateAsc, scoreDesc, scoreAsc
     const router = useRouter();
 
+    console.log("DEBUG: Blog page rendered, isCreating:", isCreating);
+
     useEffect(() => {
         const fetchPostFromId = async () => {
             if (!postId) return;
@@ -159,7 +161,7 @@ export default function BlogPage() {
                 {user && (
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                     >
                         Create Post
                     </button>
@@ -276,6 +278,36 @@ export default function BlogPage() {
                     onPageChange={setCurrentPage}
                 />
             </div>
+
+            {isCreating && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                    onClick={(e) => {
+                        console.log("DEBUG: Modal backdrop clicked");
+                        e.stopPropagation();
+                    }}
+                >
+                    <div
+                        className="w-full max-w-2xl"
+                        onClick={e => {
+                            console.log("DEBUG: Modal content clicked");
+                            e.stopPropagation();
+                        }}
+                    >
+                        <BlogForm
+                            onClose={() => {
+                                console.log("DEBUG: BlogForm onClose called");
+                                setIsCreating(false);
+                            }}
+                            onSubmit={() => {
+                                console.log("DEBUG: BlogForm onSubmit called");
+                                setIsCreating(false);
+                                fetchPosts();
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 } 
