@@ -52,7 +52,7 @@ export default function BlogPage() {
         try {
             setLoading(true);
             const response = await fetch(
-                `/api/blogs/search?searchTerm=${debouncedSearchTerm}&page=${currentPage}&limit=10`
+                `/api/blogs/search?searchTerm=${debouncedSearchTerm}&page=${currentPage}&limit=10&sortBy=${sortBy}`
             );
             if (!response.ok) {
                 throw new Error('Failed to fetch posts');
@@ -61,7 +61,6 @@ export default function BlogPage() {
 
             setPosts(data.posts || []);
             setTotalPages(data.totalPages || 1);
-
         } catch (error) {
             console.error('Error fetching posts:', error);
             setPosts([]);
@@ -73,7 +72,7 @@ export default function BlogPage() {
 
     useEffect(() => {
         fetchPosts();
-    }, [debouncedSearchTerm, currentPage]);
+    }, [debouncedSearchTerm, currentPage, sortBy]);
 
     const handleVote = async (postId: string, type: number, e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent modal from opening
@@ -118,28 +117,6 @@ export default function BlogPage() {
         } catch (error) {
             console.error('Error voting:', error);
         }
-    };
-
-    // Add this function to handle sorting
-    const sortPosts = (posts: BlogPost[]) => {
-        return [...posts].sort((a, b) => {
-            switch (sortBy) {
-                case 'dateDesc':
-                    return new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf();
-                case 'dateAsc':
-                    return new Date(a.createdAt).valueOf() - new Date(b.createdAt).valueOf();
-                case 'scoreDesc':
-                    const scoreB = b.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    const scoreA = a.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    return scoreB - scoreA;
-                case 'scoreAsc':
-                    const scoreB2 = b.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    const scoreA2 = a.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    return scoreA2 - scoreB2;
-                default:
-                    return 0;
-            }
-        });
     };
 
     const handleCloseModal = () => {
@@ -198,7 +175,7 @@ export default function BlogPage() {
             )}
 
             <div className="grid gap-6">
-                {!loading && sortPosts(posts).map((post) => (
+                {!loading && posts.map((post) => (
                     <div key={post.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
                         <div className="flex items-start gap-4">
                             <div className="flex flex-col items-center">

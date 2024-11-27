@@ -9,7 +9,11 @@ export interface Comment {
     author: {
         name: string;
         email: string;
+        firstName: string;
+        lastName: string;
     };
+    votes: Vote[];
+    children?: Comment[];
 }
 
 export interface BlogPost {
