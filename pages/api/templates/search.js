@@ -4,169 +4,68 @@ import { authorizeRequest } from '../../../lib/authorization';
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
+    console.log('Query parameters:', req.query);
+    console.log('ownedOnly value:', req.query.ownedOnly, 'type:', typeof req.query.ownedOnly);
 
-    const { searchTerm, page = 1, limit = 10 } = req.query;
-    const { userId } = req.body;
+    const { searchTerm, page = 1, limit = 10, ownedOnly, userId } = req.query;
+    let authorizedUserId = null;
 
-    if (req.method === 'POST') {
+    const isOwnedOnlyTrue = ownedOnly === 'true';
+    console.log('isOwnedOnlyTrue:', isOwnedOnlyTrue);
 
-        // Authorization check
+    if (isOwnedOnlyTrue) {
+        console.log('Entering ownedOnly block');
         const authResult = await authorizeRequest(req, userId);
         if (!authResult.authorized) {
             return res.status(403).json({ error: authResult.error });
         }
-
-        try {
-            const skip = (page - 1) * limit;
-
-            const take = Number(limit);
-
-            const templates = await prisma.codeTemplate.findMany({
-                where: {
-                    authorId: userId,
-                    OR: [
-                        {
-                            title: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            description: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            tags: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            code: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                    ],
-                },
-                skip: skip,
-                take: take,
-            });
-
-            const totalTemplates = await prisma.codeTemplate.count({
-                where: {
-                    authorId: userId,
-                    OR: [
-                        {
-                            title: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            description: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            tags: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            code: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                    ],
-                },
-            });
-
-            return res.status(200).json({
-                totalTemplates,
-                currentPage: page,
-                totalPages: Math.ceil(totalTemplates / limit),
-                templates,
-            });
-        } catch (error) {
-            console.error("Error occured retrieving templates:", error);
-            return res.status(500).json({ message: 'Error retrieving templates' });
-        }
+        authorizedUserId = authResult.userId;
+        console.log('userId after auth:', authorizedUserId);
     }
-    else if (req.method === 'GET') {
-        try {
-            const skip = (page - 1) * limit;
 
+    if (req.method === 'GET') {
+        try {
+            const skip = (Number(page) - 1) * Number(limit);
             const take = Number(limit);
 
+            const baseSearchConditions = [
+                { title: { contains: searchTerm || '' } },
+                { description: { contains: searchTerm || '' } },
+                { tags: { contains: searchTerm || '' } },
+                { code: { contains: searchTerm || '' } },
+            ];
+
+            const where = {
+                OR: baseSearchConditions,
+                ...(authorizedUserId && isOwnedOnlyTrue && { authorId: authorizedUserId })
+            };
+            console.log('Final where clause:', where);
+
             const templates = await prisma.codeTemplate.findMany({
-                where: {
-                    OR: [
-                        {
-                            title: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            description: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            tags: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            code: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                    ],
-                },
-                skip: skip,
-                take: take,
-            });
-
-            const totalTemplates = await prisma.codeTemplate.count({
-                where: {
-                    OR: [
-                        {
-                            title: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            description: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            tags: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                        {
-                            code: {
-                                contains: searchTerm || '',
-                            },
-                        },
-                    ],
+                where,
+                skip,
+                take,
+                include: {
+                    author: true,
                 },
             });
 
+            const totalTemplates = await prisma.codeTemplate.count({ where });
+
+            console.log('templates:', templates);
             return res.status(200).json({
                 totalTemplates,
-                currentPage: page,
+                currentPage: Number(page),
                 totalPages: Math.ceil(totalTemplates / take),
                 templates,
             });
         } catch (error) {
-            console.error("Error occured retrieving templates:", error);
+            console.error("Error occurred retrieving templates:", error);
             return res.status(500).json({ message: 'Error retrieving templates' });
         }
-    }
-    else {
+    } else {
         res.status(405).end(`Method Not Allowed`);
     }
-
 }
 
 // used chatGPT for prisma queries and general outline 

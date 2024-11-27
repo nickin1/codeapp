@@ -8,19 +8,36 @@ interface SaveTemplateModalProps {
     code: string;
     language: string;
     onClose: () => void;
+    initialData?: {
+        id: string;
+        title: string;
+        description: string;
+        tags: string;
+    } | null;
+    isEditing?: boolean;
+    isFork?: boolean;
 }
 
 export default function SaveTemplateModal({
     code,
     language,
     onClose,
+    initialData,
+    isEditing,
+    isFork,
 }: SaveTemplateModalProps) {
     const { user } = useAuth();
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [tags, setTags] = useState('');
+    const [title, setTitle] = useState(initialData?.title || '');
+    const [description, setDescription] = useState(initialData?.description || '');
+    const [tags, setTags] = useState(initialData?.tags || '');
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
+
+    const getModalTitle = () => {
+        if (isEditing) return 'Update Template';
+        if (isFork) return 'Fork Template';
+        return 'Save as Template';
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,10 +47,19 @@ export default function SaveTemplateModal({
         setError('');
 
         try {
-            console.log('userid: ', user.id);
-            console.log('accessToken: ', localStorage.getItem('accessToken'));
-            const response = await fetch('/api/templates', {
-                method: 'POST',
+            let endpoint = '/api/templates';
+            let method = 'POST';
+
+            if (isEditing && initialData) {
+                endpoint = `/api/templates/${initialData.id}`;
+                method = 'PUT';
+            } else if (isFork && initialData) {
+                endpoint = `/api/templates/${initialData.id}/fork`;
+                method = 'POST';
+            }
+
+            const response = await fetch(endpoint, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -43,11 +69,19 @@ export default function SaveTemplateModal({
                     description,
                     code,
                     language,
-                    tags: [...new Set(tags.split(',')
+                    tags: tags.split(',')
                         .map(tag => tag.trim())
-                        .filter(tag => tag !== ''))]
+                        .filter(tag => tag !== '')
                         .join(','),
                     authorId: user.id,
+                    ...(isFork && {
+                        userId: user.id,
+                        newTitle: title,
+                        newDescription: description,
+                        newCode: code,
+                        newLanguage: language,
+                        newTags: tags,
+                    })
                 }),
             });
 
@@ -55,7 +89,15 @@ export default function SaveTemplateModal({
                 throw new Error('Failed to save template');
             }
 
-            onClose();
+            const data = await response.json();
+
+            if (isFork) {
+                window.location.href = `/editor/?templateId=${data.newTemplateId}`;
+            } else if (isEditing) {
+                window.location.reload();
+            } else {
+                window.location.href = '/templates';
+            }
         } catch (error) {
             setError('Failed to save template. Please try again.');
         } finally {
@@ -66,7 +108,7 @@ export default function SaveTemplateModal({
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-                <h2 className="text-2xl font-bold mb-4">Save as Template</h2>
+                <h2 className="text-2xl font-bold mb-4">{getModalTitle()}</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {error && (
@@ -116,7 +158,7 @@ export default function SaveTemplateModal({
                             Cancel
                         </Button>
                         <Button type="submit" isLoading={isSaving}>
-                            Save Template
+                            {isEditing ? 'Update' : isFork ? 'Fork' : 'Save'} Template
                         </Button>
                     </div>
                 </form>

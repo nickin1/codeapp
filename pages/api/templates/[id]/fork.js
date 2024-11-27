@@ -48,7 +48,7 @@ export default async function handler(req, res) {
                 },
             });
 
-            return res.status(201).json(forkedTemplate);
+            return res.status(201).json({ newTemplateId: forkedTemplate.id });
         } catch (error) {
             console.error('Error forking template:', error);
             return res.status(500).json({ message: 'Error forking the template' });
