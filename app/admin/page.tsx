@@ -21,6 +21,7 @@ interface Content {
     hidden: boolean;
     report?: Report[];
     reports?: Report[];
+    blogPostId?: string;
 }
 
 interface PaginationInfo {
@@ -212,7 +213,12 @@ export default function AdminPanel() {
                         ) : (
                             blogPosts?.items?.map((post) => (
                                 <div key={post.id} className="border dark:border-gray-700 p-4 rounded-lg">
-                                    <h3 className="font-medium">{post.title}</h3>
+                                    <a 
+                                        href={`/blog?postId=${post.id}`}
+                                        className="block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                                    >
+                                        <h3 className="font-medium">{post.title}</h3>
+                                    </a>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                                         Reports: {post.report?.length || 0}
                                     </p>
@@ -253,7 +259,12 @@ export default function AdminPanel() {
                         ) : (
                             comments?.items?.map((comment) => (
                                 <div key={comment.id} className="border dark:border-gray-700 p-4 rounded-lg">
-                                    <p className="mb-2">{comment.content}</p>
+                                    <a 
+                                        href={`/blog?postId=${comment.blogPostId}`}
+                                        className="block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer mb-2"
+                                    >
+                                        <p>{comment.content}</p>
+                                    </a>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                                         Reports: {comment.reports?.length || 0}
                                     </p>

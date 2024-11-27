@@ -277,7 +277,7 @@ export default function BlogPage() {
                                             e.stopPropagation();
                                             handleHideContent(post.id, 'blogPost', !post.hidden);
                                         }}
-                                        className={`px-3 py-1 rounded ${post.hidden
+                                        className={`mt-4 px-3 py-1 rounded ${post.hidden
                                             ? 'bg-green-500 hover:bg-green-600'
                                             : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
                                     >
