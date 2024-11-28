@@ -7,13 +7,23 @@ interface BlogPostsPopupProps {
         title: string;
     }>;
     isVisible: boolean;
+    position?: {
+        top?: number;
+        left?: number;
+    };
 }
 
-export default function BlogPostsPopup({ blogPosts, isVisible }: BlogPostsPopupProps) {
+export default function BlogPostsPopup({ blogPosts, isVisible, position }: BlogPostsPopupProps) {
     if (!isVisible || blogPosts.length === 0) return null;
 
     return (
-        <div className="fixed z-50 mt-1 w-64 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
+        <div
+            className="absolute z-50 w-64 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5"
+            style={{
+                top: position?.top ?? 0,
+                left: position?.left ?? 0,
+            }}
+        >
             <div className="py-1 max-h-48 overflow-y-auto">
                 <div className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Referenced in Blog Posts:

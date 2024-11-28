@@ -72,8 +72,8 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
     );
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col h-full">
-            <div className="p-4 flex-1 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col h-full">
+            <div className="p-4 flex-1">
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
                         {template.title}

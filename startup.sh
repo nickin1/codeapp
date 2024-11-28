@@ -50,6 +50,7 @@ done
 # Create an admin user
 echo "Creating admin user..."
 npx prisma db seed 
+npm run populate
 
 echo "admin email: admin@example.com, password: adminPassword123"
 
