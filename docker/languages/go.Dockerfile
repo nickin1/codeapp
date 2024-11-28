@@ -10,4 +10,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "go build -o program code.go && ./program < input.txt"] 
+CMD ["timeout", "10", "bash", "-c", "go build -o program code.go && stdbuf -o0 ./program < input.txt"] 

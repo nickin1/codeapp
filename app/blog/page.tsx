@@ -11,6 +11,7 @@ import type { BlogPost } from '../types/blog';
 import { useDebounce } from '../hooks/useDebounce';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function BlogPage() {
     const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -22,13 +23,47 @@ export default function BlogPage() {
     const [isCreating, setIsCreating] = useState(false);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
+    const searchParams = useSearchParams();
+    const postId = searchParams?.get('postId');
     const [sortBy, setSortBy] = useState('dateDesc'); // Options: dateDesc, dateAsc, scoreDesc, scoreAsc
+    const router = useRouter();
+
+    console.log("DEBUG: Blog page rendered, isCreating:", isCreating);
+
+    useEffect(() => {
+        const fetchPostFromId = async () => {
+            if (!postId) return;
+
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                const response = await fetch(`/api/blogs/${postId}`, {
+                    headers: accessToken ? {
+                        'Authorization': `Bearer ${accessToken}`,
+                    } : {}
+                });
+                if (!response.ok) throw new Error('Failed to fetch post');
+
+                const post = await response.json();
+                setSelectedPost(post);
+            } catch (error) {
+                console.error('Error fetching post:', error);
+            }
+        };
+
+        fetchPostFromId();
+    }, [postId]);
 
     const fetchPosts = async () => {
         try {
             setLoading(true);
+            const accessToken = localStorage.getItem('accessToken');
             const response = await fetch(
-                `/api/blogs/search?searchTerm=${debouncedSearchTerm}&page=${currentPage}&limit=10`
+                `/api/blogs/search?searchTerm=${debouncedSearchTerm}&page=${currentPage}&limit=10&sortBy=${sortBy}`,
+                {
+                    headers: accessToken ? {
+                        'Authorization': `Bearer ${accessToken}`,
+                    } : {}
+                }
             );
             if (!response.ok) {
                 throw new Error('Failed to fetch posts');
@@ -37,7 +72,6 @@ export default function BlogPage() {
 
             setPosts(data.posts || []);
             setTotalPages(data.totalPages || 1);
-
         } catch (error) {
             console.error('Error fetching posts:', error);
             setPosts([]);
@@ -49,7 +83,7 @@ export default function BlogPage() {
 
     useEffect(() => {
         fetchPosts();
-    }, [debouncedSearchTerm, currentPage]);
+    }, [debouncedSearchTerm, currentPage, sortBy]);
 
     const handleVote = async (postId: string, type: number, e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent modal from opening
@@ -96,26 +130,37 @@ export default function BlogPage() {
         }
     };
 
-    // Add this function to handle sorting
-    const sortPosts = (posts: BlogPost[]) => {
-        return [...posts].sort((a, b) => {
-            switch (sortBy) {
-                case 'dateDesc':
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                case 'dateAsc':
-                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                case 'scoreDesc':
-                    const scoreB = b.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    const scoreA = a.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    return scoreB - scoreA;
-                case 'scoreAsc':
-                    const scoreB2 = b.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    const scoreA2 = a.votes.reduce((acc, vote) => acc + vote.type, 0);
-                    return scoreA2 - scoreB2;
-                default:
-                    return 0;
+    const handleCloseModal = () => {
+        setSelectedPost(null);
+        // Remove postId from URL when closing modal
+        router.push('/blog');
+    };
+
+    const handleSelectPost = (post: BlogPost) => {
+        setSelectedPost(post);
+        // Add postId to URL when opening modal
+        router.push(`/blog?postId=${post.id}`);
+    };
+
+    const handleHideContent = async (contentId: string, contentType: string, hide: boolean) => {
+        try {
+            const response = await fetch('/api/admin/hide-content', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ contentId, contentType, hide }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update content visibility');
             }
-        });
+
+            fetchPosts();
+        } catch (error) {
+            console.error('Error updating content visibility:', error);
+        }
     };
 
     return (
@@ -125,7 +170,7 @@ export default function BlogPage() {
                 {user && (
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                     >
                         Create Post
                     </button>
@@ -162,8 +207,8 @@ export default function BlogPage() {
             )}
 
             <div className="grid gap-6">
-                {!loading && sortPosts(posts).map((post) => (
-                    <div key={post.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                {!loading && posts.map((post) => (
+                    <div key={post.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow ${post.hidden ? 'opacity-75' : ''}`}>
                         <div className="flex items-start gap-4">
                             <div className="flex flex-col items-center">
                                 <button
@@ -188,10 +233,15 @@ export default function BlogPage() {
                                     ▼
                                 </button>
                             </div>
-                            <div className="flex-1 min-w-0" onClick={() => setSelectedPost(post)}>
-                                <h2 className="text-xl font-bold mb-2 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">
-                                    {post.title}
-                                </h2>
+                            <div className="flex-1 min-w-0" onClick={() => handleSelectPost(post)}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <h2 className="text-xl font-bold dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">
+                                        {post.title}
+                                    </h2>
+                                    {post.hidden && (
+                                        <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">Hidden</span>
+                                    )}
+                                </div>
                                 <div className="h-[4.5rem] overflow-hidden relative mb-4">
                                     <div className="prose dark:prose-invert max-w-none">
                                         <ReactMarkdown
@@ -221,6 +271,19 @@ export default function BlogPage() {
                                         </span>
                                     ))}
                                 </div>
+                                {user?.isAdmin && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleHideContent(post.id, 'blogPost', !post.hidden);
+                                        }}
+                                        className={`mt-4 px-3 py-1 rounded ${post.hidden
+                                            ? 'bg-green-500 hover:bg-green-600'
+                                            : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
+                                    >
+                                        {post.hidden ? 'Unhide' : 'Hide'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -230,7 +293,7 @@ export default function BlogPage() {
             {selectedPost && (
                 <BlogPostModal
                     post={selectedPost}
-                    onClose={() => setSelectedPost(null)}
+                    onClose={handleCloseModal}
                     onUpdate={fetchPosts}
                 />
             )}
@@ -242,6 +305,36 @@ export default function BlogPage() {
                     onPageChange={setCurrentPage}
                 />
             </div>
+
+            {isCreating && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                    onClick={(e) => {
+                        console.log("DEBUG: Modal backdrop clicked");
+                        e.stopPropagation();
+                    }}
+                >
+                    <div
+                        className="w-full max-w-2xl"
+                        onClick={e => {
+                            console.log("DEBUG: Modal content clicked");
+                            e.stopPropagation();
+                        }}
+                    >
+                        <BlogForm
+                            onClose={() => {
+                                console.log("DEBUG: BlogForm onClose called");
+                                setIsCreating(false);
+                            }}
+                            onSubmit={() => {
+                                console.log("DEBUG: BlogForm onSubmit called");
+                                setIsCreating(false);
+                                fetchPosts();
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 } 

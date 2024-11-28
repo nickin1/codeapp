@@ -10,4 +10,4 @@ RUN mkdir -p /home/coderunner/code && \
 
 USER coderunner
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "rustc code.rs -o program && ./program < input.txt"] 
+CMD ["timeout", "10", "bash", "-c", "rustc code.rs -o program && stdbuf -o0 ./program < input.txt"] 

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardHeader, CardBody, CardFooter, Button, Chip, Divider } from "@nextui-org/react";
 import { useRouter } from 'next/navigation';
-
+import EditTemplateModal from '../EditTemplateModal';
+import BlogPostsPopup from './BlogPostsPopup';
 
 interface TemplateCardProps {
     template: {
@@ -13,98 +13,125 @@ interface TemplateCardProps {
         language: string;
         tags: string;
         authorId: string;
-        author: {
-          name: string;
+        author?: {
+            firstName: string;
+            lastName: string;
         };
         forked: boolean;
         createdAt: Date;
         updatedAt: Date;
-      };
-      onEdit?: (template: any) => void;
-      onDelete?: (id: string) => void;
-  }
-  export default function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
-    const { user } = useAuth();
-    const [isForking, setIsForking] = useState(false);
-    const router = useRouter();
+        blogPosts: Array<{
+            id: string;
+            title: string;
+        }>;
+    };
+    onDelete?: (id: string) => void;
+    onUpdate?: () => void;
+}
 
-    const handleUseTemplate = () => {
+export default function TemplateCard({ template, onDelete, onUpdate }: TemplateCardProps) {
+    const { user } = useAuth();
+    const router = useRouter();
+    const [showBlogPosts, setShowBlogPosts] = useState(false);
+    const [copyFeedback, setCopyFeedback] = useState(false);
+
+    const handleViewInEditor = () => {
         router.push(`/editor?templateId=${template.id}`);
     };
 
-    const handleFork = async () => {
-        try {
-            setIsForking(true);
-            const response = await fetch(`/api/templates/${template.id}/fork`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: user?.id,
-                    newTitle: `${template.title} (Fork)`,
-                }),
-            });
-    
-          if (!response.ok) throw new Error('Failed to fork template');
-          
-          alert('Template forked successfully!');
-        } catch (error) {
-          alert('Failed to fork template');
-        } finally {
-          setIsForking(false);
-        }
-    };
-    return (
+    const isOwner = user?.id === template.authorId;
 
-        <Card className="max-w-md">
-            <CardHeader className="flex flex-col items-start gap-2">
-                <div className="flex justify-between w-full">
-                    <h3 className="text-xl font-semibold text-gray-800">{template.title}</h3>
-                    {template.forked && (
-                        <Chip size="sm" variant="flat" color="default">
-                            Forked
-                        </Chip>
+    const handleCopyLink = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const link = `${window.location.origin}/editor?templateId=${template.id}`;
+        navigator.clipboard.writeText(link);
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+    };
+
+    const blogPostsButton = (
+        <div className="relative">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setShowBlogPosts(!showBlogPosts);
+                }}
+                onBlur={() => setTimeout(() => setShowBlogPosts(false), 200)}
+                className={`px-2 py-1 text-xs rounded-full ${template.blogPosts.length > 0
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                    }`}
+            >
+                {template.blogPosts.length} Blog Post{template.blogPosts.length !== 1 ? 's' : ''}
+            </button>
+            <BlogPostsPopup
+                blogPosts={template.blogPosts}
+                isVisible={showBlogPosts}
+            />
+        </div>
+    );
+
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col h-full">
+            <div className="p-4 flex-1 overflow-hidden">
+                <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                        {template.title}
+                    </h3>
+                    <div className="flex items-center gap-2 relative">
+                        {template.forked && (
+                            <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                                Forked
+                            </span>
+                        )}
+                        <button
+                            onClick={handleCopyLink}
+                            className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            {copyFeedback ? 'Copied!' : 'Copy Link'}
+                        </button>
+                        {blogPostsButton}
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span>by {template.author
+                        ? `${template.author.firstName} ${template.author.lastName}`
+                        : 'Unknown Author'
+                    }</span>
+                    {isOwner && (
+                        <span className="px-2 py-0.5 text-xs bg-green-500 text-white rounded-full">
+                            Your Template
+                        </span>
                     )}
                 </div>
-                <p className="text-sm text-gray-600">by {template.author.name}</p>
-            </CardHeader>
-            <Divider />
-            <CardBody className="flex flex-col gap-2">
-                    {template.description && (
-                        <p className="text-sm text-gray-600">{template.description}</p>
-                    )}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <Chip color="primary" variant="flat">
-                            {template.language}
-                        </Chip>
-                        {template.tags.split(',').map((tag: string) => (
-                            <Chip color="primary" variant="flat">
-                                {tag}
-                            </Chip>
-                        ))}
-                    </div>
-            </CardBody>
-            <Divider />
-            <CardFooter className="gap2">
-            <Button color="primary" variant="flat" onClick={handleUseTemplate}>
-                    Use Template
-                </Button>
-                <Button color="primary" isLoading={isForking} onClick={handleFork}>
-                    {isForking ? 'Forking...' : 'Fork'}
-                </Button>
-                {user?.id === template.authorId && (
-                <>
-                    <Button color="default" variant="flat">
-                        Edit
-                    </Button>
-
-                    <Button color="danger" variant="flat" onPress={() => onDelete?.(template.id)}>
-                        Delete
-                    </Button>
-                </>
+                {template.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">
+                        {template.description}
+                    </p>
                 )}
-            </CardFooter>
-        </Card>
+                <div className="flex flex-wrap gap-2 mt-3">
+                    <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-200 rounded">
+                        {template.language}
+                    </span>
+                    {template.tags.split(',').map((tag: string, index: number) => (
+                        <span
+                            key={index}
+                            className="px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-200 rounded"
+                        >
+                            {tag.trim()}
+                        </span>
+                    ))}
+                </div>
+            </div>
+
+            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+                <button
+                    onClick={handleViewInEditor}
+                    className="w-3/4 mx-auto block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                    View in Code Editor
+                </button>
+            </div>
+        </div>
     );
 }

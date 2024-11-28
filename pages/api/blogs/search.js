@@ -1,96 +1,82 @@
 import { PrismaClient } from '@prisma/client';
 import { off } from 'process';
-import { authorizeRequest } from '../../../lib/authorization';
+import { authorizeRequest, authorizeRequestNoUserID } from '../../../lib/authorization';
 
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
-    const { searchTerm, page = 1, limit = 10 } = req.query;
+    const { searchTerm, page = 1, limit = 10, sortBy = 'dateDesc' } = req.query;
 
     if (req.method === 'GET') {
         try {
-
-            const authResult = await authorizeRequest(req);
-
+            const authResult = await authorizeRequestNoUserID(req);
             const userId = authResult.userId;
 
-            let blogPosts;
+            console.log("isAdmin:", authResult.isAdmin);
 
-            if (authResult.isAdmin) {
-                // Retrieve all relevant blog posts
-                blogPosts = await prisma.blogPost.findMany({
-                    where: {
-                        OR: [
-                            { title: { contains: searchTerm || '' } },
-                            { content: { contains: searchTerm || '' } },
-                            { tags: { contains: searchTerm || '' } },
-                        ],
-                    },
-                    include: {
-                        votes: true, // Include votes for each blog post
-                        author: true,
-                    },
-                });
-            }
-            else {
-                // Retrieve relevant blog posts
-                console.log("searching for blog posts");
-                blogPosts = await prisma.blogPost.findMany({
-                    where: {
-                        OR: [
-                            {
-                                AND: [
-                                    { hidden: false }, // Show only non-hidden posts
-                                    {
-                                        OR: [
-                                            { title: { contains: searchTerm || '' } },
-                                            { content: { contains: searchTerm || '' } },
-                                            { tags: { contains: searchTerm || '' } },
-                                        ],
-                                    },
-                                ],
-                            },
-                            userId ? {
-                                AND: [
-                                    { authorId: userId }, // Allow user to see their own posts
-                                    {
-                                        OR: [
-                                            { title: { contains: searchTerm || '' } },
-                                            { content: { contains: searchTerm || '' } },
-                                            { tags: { contains: searchTerm || '' } },
-                                        ],
-                                    },
-                                ],
-                            } : null, // Do not include the user-specific clause if userId is null
-                        ].filter(Boolean),
-                    },
-                    include: {
-                        votes: true, // Include votes for each blog post
-                        author: true,
-                    },
-                });
+            let whereClause = {
+                OR: [
+                    { title: { contains: searchTerm || '' } },
+                    { content: { contains: searchTerm || '' } },
+                    { tags: { contains: searchTerm || '' } },
+                ]
+            };
+
+            if (!authResult.isAdmin) {
+                whereClause = {
+                    AND: [
+                        whereClause,
+                        {
+                            OR: [
+                                { hidden: false },
+                                { authorId: userId }
+                            ]
+                        }
+                    ]
+                };
             }
 
-            // Calculate scores for all blog posts
-            const resultsWithScores = blogPosts.map(blogPost => {
-                const score = blogPost.votes.reduce((acc, vote) => acc + vote.type, 0);
-                return { ...blogPost, score };
+            let blogPosts = await prisma.blogPost.findMany({
+                where: whereClause,
+                include: {
+                    votes: true,
+                    author: true,
+                },
             });
 
-            // Sort by score descending
-            resultsWithScores.sort((a, b) => b.score - a.score);
+            blogPosts = blogPosts.map(post => ({
+                ...post,
+                score: post.votes.reduce((acc, vote) => acc + vote.type, 0)
+            }));
 
-            // Paginate the results
-            const paginatedResults = resultsWithScores.slice((page - 1) * limit, page * limit);
+            switch (sortBy) {
+                case 'dateDesc':
+                    blogPosts.sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf());
+                    break;
+                case 'dateAsc':
+                    blogPosts.sort((a, b) => new Date(a.createdAt).valueOf() - new Date(b.createdAt).valueOf());
+                    break;
+                case 'scoreDesc':
+                    blogPosts.sort((a, b) => b.score - a.score);
+                    break;
+                case 'scoreAsc':
+                    blogPosts.sort((a, b) => a.score - b.score);
+                    break;
+                default:
+                    blogPosts.sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf());
+            }
 
+            const paginatedResults = blogPosts.slice((page - 1) * limit, page * limit);
+
+            console.log(paginatedResults);
             return res.status(200).json({
-                totalPosts: resultsWithScores.length, // Total number of posts found
-                currentPage: page,
-                totalPages: Math.ceil(resultsWithScores.length / limit),
+                totalPosts: blogPosts.length,
+                currentPage: Number(page),
+                totalPages: Math.ceil(blogPosts.length / limit),
                 posts: paginatedResults,
             });
         } catch (error) {
-            console.error("Error occured during search:", error);
+            console.error("Error occurred during search:", error);
             return res.status(500).json({ message: 'Error retrieving blog posts', error });
         }
     } else {

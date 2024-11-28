@@ -7,4 +7,4 @@ RUN apt-get update && apt-get install -y \
 USER coderunner
 
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "java Main.java < input.txt"] 
+CMD ["timeout", "10", "bash", "-c", "javac Main.java && java Main < input.txt"] 

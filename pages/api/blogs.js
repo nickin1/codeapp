@@ -4,18 +4,22 @@ import { authorizeRequest } from "../../lib/authorization";
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
+    console.log("Request method:", req.method);
+
     // Create new blog post
     if (req.method === 'POST') {
+        console.log("Request body:", req.body);
         const { title, content, authorId, templateIds, tags } = req.body;
 
         // Authorization check
-        const authResult = await authorizeRequest(req, authorId); // Check if the user is authorized
+        const authResult = await authorizeRequest(req, authorId);
+        console.log("Authorization result:", authResult);
         if (!authResult.authorized) {
-            return res.status(403).json({ error: authResult.error }); // Return 403 if not authorized
+            console.log("Authorization failed:", authResult.error);
+            return res.status(403).json({ error: authResult.error });
         }
 
         try {
-            // Note that Prisma automatically fetches the corresponding author name because of the schema relations!
             const newBlog = await prisma.blogPost.create({
                 data: {
                     title,
@@ -28,7 +32,10 @@ export default async function handler(req, res) {
                     } : undefined,
                     tags: tags
                 },
-            })
+            });
+
+            console.log("New blog created:", newBlog);
+
             res.status(201).json(newBlog);
         } catch (error) {
             console.error("Error creating blog post:", error);
@@ -36,6 +43,7 @@ export default async function handler(req, res) {
         }
     }
     else {
+        console.log("Invalid request method:", req.method);
         res.status(405).end(`Method Not Allowed`);
     }
 }

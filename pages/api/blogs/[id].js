@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { authorizeRequest } from '../../../lib/authorization';
+import { authorizeRequestNoUserID, authorizeRequest } from '../../../lib/authorization';
 
 const prisma = new PrismaClient();
 
@@ -8,6 +8,10 @@ export default async function handler(req, res) {
 
     if (req.method === "GET") {
         try {
+            const authResult = await authorizeRequestNoUserID(req);
+            const userId = authResult.userId;
+
+            console.log("DEBUG: User ID:", userId);
 
             const blogPost = await prisma.blogPost.findUnique({
                 where: { id },
@@ -26,6 +30,11 @@ export default async function handler(req, res) {
 
             if (!blogPost) {
                 return res.status(404).json({ error: "Blog post not found" });
+            }
+
+            // Authorization check for hidden posts
+            if (blogPost.hidden && !authResult.isAdmin && blogPost.authorId !== userId) {
+                return res.status(404).json({ error: "Blog post unavailable" });
             }
 
             // Transform flat comments into a tree structure
@@ -53,30 +62,38 @@ export default async function handler(req, res) {
             // Replace flat comments with tree structure
             blogPost.comments = commentTree;
 
-            const authResult = await authorizeRequest(req, blogPost.authorId);
-
-            // dont show if hidden
-            if (blogPost.hidden && !authResult.authorized) {
-                return res.status(404).json({ error: "Blog post unavailable" });
-            }
-
             // Filter comments based on user's authorization level
-            const filteredComments = blogPost.comments.filter(comment => {
-                if (authResult.isAdmin || comment.authorId === authResult.userId) {
-                    return true; // Show if user is admin or the author of the comment
-                }
-                return !comment.hidden; // Show only non-hidden comments otherwise
-            });
+            const filterComments = (comments) => {
+                return comments.map(comment => {
+                    // Create a copy of the comment
+                    const filteredComment = { ...comment };
+
+                    // If there are children, recursively filter them
+                    if (comment.children?.length > 0) {
+                        filteredComment.children = filterComments(comment.children);
+                    }
+
+                    // For non-admins and non-authors, remove hidden comments
+                    if (!authResult.isAdmin && comment.authorId !== authResult.userId && comment.hidden) {
+                        return null;
+                    }
+
+                    return filteredComment;
+                }).filter(Boolean); // Remove null entries
+            };
+
+            const filteredComments = filterComments(blogPost.comments);
 
             // Create a response object without the original comments
             const responseBlogPost = {
                 ...blogPost,
-                comments: filteredComments, // Replace original comments with filtered comments
+                comments: filteredComments,
             };
 
+            console.log("DEBUG: Response:", responseBlogPost);
             return res.status(200).json(responseBlogPost);
         } catch (error) {
-            console.error("Error occured when retrieving blog post:", error);
+            console.error("Error occurred when retrieving blog post:", error);
             if (error.code === "P2025") {
                 res.status(404).json({ error: "Blog post not found" });
             } else {
@@ -155,27 +172,36 @@ export default async function handler(req, res) {
         }
     }
     else if (req.method === "DELETE") {
+        console.log(`Attempting to delete blog post with id: ${id}`);
         try {
             const blogPost = await prisma.blogPost.findUnique({
                 where: { id },
             });
 
             if (!blogPost) {
+                console.log(`Blog post with id ${id} not found`);
                 return res.status(404).json({ error: "Blog post not found" });
             }
 
+            console.log(`Found blog post:`, blogPost);
+
             // Authorization check
             const authResult = await authorizeRequest(req, blogPost.authorId);
+            console.log(`Authorization result:`, authResult);
             if (!authResult.authorized) {
+                console.log(`Authorization failed for user trying to delete blog post ${id}`);
                 return res.status(403).json({ error: authResult.error });
             }
 
+            console.log(`Deleting blog post ${id}...`);
             const deletedBlogPost = await prisma.blogPost.delete({
                 where: { id }
             });
 
+            console.log(`Successfully deleted blog post:`, deletedBlogPost);
             return res.status(200).json(deletedBlogPost);
         } catch (error) {
+            console.error(`Error deleting blog post ${id}:`, error);
             if (error.code === "P2025") {
                 res.status(404).json({ error: "Blog post not found" });
             } else {

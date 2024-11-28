@@ -8,4 +8,4 @@ RUN apt-get update && apt-get install -y \
 USER coderunner
 
 WORKDIR /home/coderunner/code
-CMD ["bash", "-c", "node code.js < input.txt"] 
+CMD ["timeout", "10", "bash", "-c", "node code.js < input.txt"] 

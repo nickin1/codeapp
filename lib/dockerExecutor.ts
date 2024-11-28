@@ -18,7 +18,7 @@ export class DockerExecutor {
         code: string,
         language: string,
         input: string = '',
-        onOutput?: (type: 'stdout' | 'stderr', data: string) => void
+        onOutput?: (type: 'stdout' | 'stderr' | 'status', data: string) => void
     ): Promise<{ stdout: string, stderr: string }> {
         console.log(`Starting code execution for language: ${language}`);
         const containerId = crypto.randomBytes(16).toString('hex');
@@ -121,18 +121,19 @@ export class DockerExecutor {
             let stdout = '';
             let stderr = '';
 
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 console.log('Starting execution promise...');
 
                 // Set timeout
                 const timeoutId = setTimeout(async () => {
                     console.log('Execution timeout reached');
                     try {
-                        await container.kill();
-                        if (onOutput) {
-                            onOutput('stderr', 'Execution timeout');
-                        }
-                        reject(new Error('Execution timeout'));
+                        // await container.stop({ t: 0 });  // t: 0 means don't wait
+                        await container.kill({ signal: 'SIGTERM' });
+                        // if (onOutput) {
+                        //     onOutput('stderr', 'Execution timeout');
+                        // }
+                        // reject(new Error('Execution timeout'));
                     } catch (error) {
                         console.error('Error killing container:', error);
                     }
@@ -185,16 +186,47 @@ export class DockerExecutor {
                     stderr += error.message;
                 });
 
-                container.wait(async (error) => {
-                    console.log('Container execution finished');
+                container.wait(async (error, result) => {
+                    console.log('Container execution finished, result:', result);
                     clearTimeout(timeoutId);
+
                     if (error) {
                         console.error('Container wait error:', error);
-                        if (onOutput) {
-                            onOutput('stderr', error.message);
-                        }
                         reject(error);
                         return;
+                    }
+
+                    // Docker exit codes:
+                    // 137 = Container killed by OOM killer (128 + SIGKILL(9))
+                    // 139 = Segmentation fault (128 + SIGSEGV(11))
+                    // 134 = Abort (128 + SIGABRT(6))
+                    const exitCode = result?.StatusCode;
+                    let terminationReason = '';
+
+                    switch (exitCode) {
+                        case 137:
+                            terminationReason = `Process terminated: Memory limit exceeded (512MB)`;
+                            break;
+                        case 124:
+                            terminationReason = `Process terminated: Execution timeout (10s)`;
+                            break;
+                        case 139:
+                            terminationReason = `Process terminated: Segmentation fault`;
+                            break;
+                        case 134:
+                            terminationReason = `Process terminated: Program aborted`;
+                            break;
+                        case 0:
+                            terminationReason = `Process completed successfully`;
+                            break;
+                        default:
+                            terminationReason = `Process terminated with exit code ${exitCode}`;
+                    }
+
+                    console.log(`Container exit code: ${exitCode}, reason: ${terminationReason}`);
+
+                    if (onOutput) {
+                        onOutput('status', terminationReason);
                     }
 
                     try {
@@ -209,25 +241,7 @@ export class DockerExecutor {
             });
         } catch (error) {
             console.error('Execution error:', error);
-
-            // Cleanup on error
-            console.log('Starting error cleanup...');
-            try {
-                console.log('Removing container...');
-                const container = this.docker.getContainer(containerId);
-                await container.remove({ force: true });
-                console.log('Container removed successfully');
-            } catch (cleanupError) {
-                console.error('Container cleanup error:', cleanupError);
-            }
-            try {
-                console.log('Removing temp directory...');
-                await fs.rm(tempPath, { recursive: true });
-                console.log('Temp directory removed successfully');
-            } catch (cleanupError) {
-                console.error('Temp directory cleanup error:', cleanupError);
-            }
-            throw error;
+            return Promise.reject(error)
         }
     }
 
