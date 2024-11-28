@@ -33,12 +33,21 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
     const { user } = useAuth();
     const router = useRouter();
     const [showBlogPosts, setShowBlogPosts] = useState(false);
+    const [copyFeedback, setCopyFeedback] = useState(false);
 
     const handleViewInEditor = () => {
         router.push(`/editor?templateId=${template.id}`);
     };
 
     const isOwner = user?.id === template.authorId;
+
+    const handleCopyLink = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const link = `${window.location.origin}/editor?templateId=${template.id}`;
+        navigator.clipboard.writeText(link);
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+    };
 
     const blogPostsButton = (
         <div className="relative">
@@ -75,6 +84,12 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
                                 Forked
                             </span>
                         )}
+                        <button
+                            onClick={handleCopyLink}
+                            className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            {copyFeedback ? 'Copied!' : 'Copy Link'}
+                        </button>
                         {blogPostsButton}
                     </div>
                 </div>
@@ -90,7 +105,7 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
                     )}
                 </div>
                 {template.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 overflow-y-auto max-h-24">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">
                         {template.description}
                     </p>
                 )}
@@ -109,7 +124,7 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
                 </div>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 p-4 mt-auto">
+            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
                 <button
                     onClick={handleViewInEditor}
                     className="w-3/4 mx-auto block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
