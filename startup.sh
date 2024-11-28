@@ -29,7 +29,7 @@ echo "Running database migrations..."
 npx prisma migrate deploy
 
 # Check if required compilers/interpreters are installed
-REQUIRED_COMMANDS=("node" "gcc" "g++" "python3" "java")
+REQUIRED_COMMANDS=("node")
 for COMMAND in "${REQUIRED_COMMANDS[@]}"; do
     if command_exists "$COMMAND"; then
         echo "$COMMAND is installed."
