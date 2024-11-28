@@ -22,6 +22,8 @@ ACCESS_TOKEN_SECRET=$(openssl rand -hex 32)
 REFRESH_TOKEN_SECRET=$(openssl rand -hex 32)
 EOL
 
+chmod 644 .env
+
 echo ".env file created with generated secrets."
 
 # Run database migrations
