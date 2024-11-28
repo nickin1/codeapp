@@ -197,7 +197,7 @@ export default function AdminPanel() {
                 {/* Blog Posts Section */}
                 <section className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <h2 className="text-xl font-semibold mb-4">
-                        Reported Blog Posts
+                        Blog Posts
                         <span className="text-sm font-normal ml-2">
                             (Total: {blogPosts?.pagination.totalItems || 0})
                         </span>
@@ -213,7 +213,7 @@ export default function AdminPanel() {
                         ) : (
                             blogPosts?.items?.map((post) => (
                                 <div key={post.id} className="border dark:border-gray-700 p-4 rounded-lg">
-                                    <a 
+                                    <a
                                         href={`/blog?postId=${post.id}`}
                                         className="block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
                                     >
@@ -243,7 +243,7 @@ export default function AdminPanel() {
                 {/* Comments Section */}
                 <section className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <h2 className="text-xl font-semibold mb-4">
-                        Reported Comments
+                        Comments
                         <span className="text-sm font-normal ml-2">
                             (Total: {comments?.pagination.totalItems || 0})
                         </span>
@@ -259,7 +259,7 @@ export default function AdminPanel() {
                         ) : (
                             comments?.items?.map((comment) => (
                                 <div key={comment.id} className="border dark:border-gray-700 p-4 rounded-lg">
-                                    <a 
+                                    <a
                                         href={`/blog?postId=${comment.blogPostId}`}
                                         className="block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer mb-2"
                                     >
