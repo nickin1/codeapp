@@ -28,7 +28,7 @@ echo ".env file created with generated secrets."
 
 # Run database migrations
 echo "Running database migrations..."
-npx prisma migrate deploy
+npx prisma migrate dev
 
 # Check if required compilers/interpreters are installed
 REQUIRED_COMMANDS=("node")
