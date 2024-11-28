@@ -43,11 +43,7 @@ done
 
 # Build Docker images
 echo "Building Docker images..."
-docker build -t scriptorium-base -f docker/base.Dockerfile .
-for lang in docker/languages/*.Dockerfile; do
-    name=$(basename "$lang" .Dockerfile)
-    docker build -t "scriptorium-$name" -f "$lang" .
-done
+./scripts/build-images.sh
 
 # Create an admin user
 echo "Creating admin user..."
