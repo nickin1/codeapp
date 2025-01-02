@@ -5,6 +5,18 @@ import { useAuth } from '../context/AuthContext';
 import { formatDistance } from 'date-fns';
 import type { Comment } from '../types/blog';
 import ReportModal from './ReportModal';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ThumbsUp, ThumbsDown, Reply, Flag } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+    Collapsible,
+    CollapsibleContent,
+} from "@/components/ui/collapsible"
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CommentSectionProps {
     postId: string;
@@ -15,31 +27,33 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
     const [comments, setComments] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [newComment, setNewComment] = useState('');
+    const [commentText, setCommentText] = useState('');
+    const [replyText, setReplyText] = useState('');
     const [replyTo, setReplyTo] = useState<string | null>(null);
     const [reportingComment, setReportingComment] = useState<string | null>(null);
     const { user } = useAuth();
 
     const fetchComments = async () => {
         try {
-            setLoading(true);
             const accessToken = localStorage.getItem('accessToken');
             const response = await fetch(`/api/blogs/${postId}`, {
                 headers: accessToken ? {
                     'Authorization': `Bearer ${accessToken}`,
                 } : {}
             });
+
             if (!response.ok) {
                 throw new Error('Failed to fetch comments');
             }
+
             const data = await response.json();
             setComments(data.comments || []);
             setError(null);
+            setLoading(false);
         } catch (error) {
             console.error('Error fetching comments:', error);
             setError('Failed to load comments');
             setComments([]);
-        } finally {
             setLoading(false);
         }
     };
@@ -48,9 +62,12 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
         fetchComments();
     }, [postId]);
 
-    const handleSubmitComment = async (e: React.FormEvent) => {
+    const handleSubmitComment = async (e: React.FormEvent, parentId?: string) => {
         e.preventDefault();
-        if (!user || !newComment.trim()) return;
+        if (!user) return;
+
+        const text = parentId ? replyText : commentText;
+        if (!text.trim()) return;
 
         try {
             const response = await fetch(`/api/blogs/${postId}/comments`, {
@@ -60,16 +77,20 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
                 },
                 body: JSON.stringify({
-                    content: newComment,
+                    content: text,
                     authorId: user.id,
                     blogPostId: postId,
-                    parentId: replyTo,
+                    parentId,
                 }),
             });
 
             if (response.ok) {
-                setNewComment('');
-                setReplyTo(null);
+                if (parentId) {
+                    setReplyText('');
+                    setReplyTo(null);
+                } else {
+                    setCommentText('');
+                }
                 fetchComments();
                 onUpdate();
             }
@@ -191,80 +212,131 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
     const renderComment = (comment: Comment) => {
         const score = comment.votes.reduce((acc, vote) => acc + vote.type, 0);
         const userVote = user ? comment.votes.find(vote => vote.userId === user.id)?.type : 0;
+        const isReplyingToThis = replyTo === comment.id;
 
         return (
-            <div key={comment.id} className={`border-l-2 pl-4 mb-4 ${comment.hidden ? 'opacity-60' : ''}`}>
-                <div className="flex items-start gap-2">
-                    {/* Voting buttons */}
-                    <div className="flex flex-col items-center">
-                        <button
-                            onClick={() => handleVote(comment.id, 1)}
-                            className={`p-1 ${userVote === 1 ? 'text-blue-500' : 'text-gray-400'}`}
-                            disabled={!user}
-                        >
-                            ▲
-                        </button>
-                        <span className="text-sm font-medium">{score}</span>
-                        <button
-                            onClick={() => handleVote(comment.id, -1)}
-                            className={`p-1 ${userVote === -1 ? 'text-red-500' : 'text-gray-400'}`}
-                            disabled={!user}
-                        >
-                            ▼
-                        </button>
-                    </div>
-
-                    {/* Rest of comment content */}
-                    <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                            <div className="text-sm text-gray-500">
-                                {comment.author.firstName} {comment.author.lastName} •
-                                {formatDistance(new Date(comment.createdAt), new Date(), { addSuffix: true })}
-                                {comment.hidden && (
-                                    <span className="ml-2 text-red-500 text-xs">[Hidden]</span>
-                                )}
-                            </div>
-                            {user?.isAdmin && (
-                                <button
-                                    onClick={() => handleHideContent(comment.id, 'comment', !comment.hidden)}
-                                    className={`px-2 py-1 text-xs rounded ${comment.hidden
-                                        ? 'bg-green-500 hover:bg-green-600'
-                                        : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
-                                >
-                                    {comment.hidden ? 'Unhide' : 'Hide'}
-                                </button>
-                            )}
-                        </div>
-                        <p className="mt-1">
-                            {comment.content}
-                            {comment.hidden && !user?.isAdmin && (
-                                <span className="text-gray-500 italic ml-2">
-                                    (This comment has been hidden by an admin)
-                                </span>
-                            )}
-                        </p>
-                        {user && (
-                            <button
-                                onClick={() => setReplyTo(comment.id)}
-                                className="text-sm text-blue-500 mt-1 hover:text-blue-600"
-                            >
-                                Reply
-                            </button>
-                        )}
-                        {user && (
-                            <button
-                                onClick={() => setReportingComment(`${postId}-${comment.id}`)}
-                                className="text-sm text-red-500 ml-2 hover:text-red-600"
-                            >
-                                Report
-                            </button>
-                        )}
-                    </div>
+            <div key={comment.id} className={cn(
+                "border-l-2 pl-4 space-y-2",
+                comment.hidden ? "opacity-60" : "",
+                "border-l-muted"
+            )}>
+                <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium">
+                        {comment.author.firstName} {comment.author.lastName}
+                    </span>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">
+                        {formatDistance(new Date(comment.createdAt), new Date(), { addSuffix: true })}
+                    </span>
+                    {comment.hidden && (
+                        <span className="text-destructive text-xs">[Hidden]</span>
+                    )}
                 </div>
 
-                {/* Render child comments */}
+                <p className="text-sm">{comment.content}</p>
+
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                        <Button
+                            onClick={() => handleVote(comment.id, 1)}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                                "h-6 w-6 p-0",
+                                userVote === 1 && "text-primary"
+                            )}
+                            disabled={!user}
+                        >
+                            <ThumbsUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <span className="text-sm font-medium min-w-[20px] text-center">{score}</span>
+                        <Button
+                            onClick={() => handleVote(comment.id, -1)}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                                "h-6 w-6 p-0",
+                                userVote === -1 && "text-destructive"
+                            )}
+                            disabled={!user}
+                        >
+                            <ThumbsDown className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+
+                    {user && (
+                        <Button
+                            onClick={() => setReplyTo(isReplyingToThis ? null : comment.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                        >
+                            <Reply className="h-3 w-3 mr-1" />
+                            {isReplyingToThis ? 'Cancel' : 'Reply'}
+                        </Button>
+                    )}
+
+                    {user && (
+                        <Button
+                            onClick={() => setReportingComment(`${postId}-${comment.id}`)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs text-destructive"
+                        >
+                            <Flag className="h-3 w-3 mr-1" />
+                            Report
+                        </Button>
+                    )}
+                </div>
+
+                <AnimatePresence>
+                    {isReplyingToThis && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{
+                                opacity: 1,
+                                height: "auto",
+                                transition: {
+                                    height: { duration: 0.2 },
+                                    opacity: { duration: 0.2, delay: 0.1 }
+                                }
+                            }}
+                            exit={{
+                                opacity: 0,
+                                height: 0,
+                                transition: {
+                                    height: { duration: 0.2 },
+                                    opacity: { duration: 0.15 }
+                                }
+                            }}
+                            className="overflow-hidden"
+                        >
+                            <div className="pt-2 p-0.5">
+                                <form onSubmit={(e) => handleSubmitComment(e, comment.id)} className="space-y-2">
+                                    <Textarea
+                                        value={replyText}
+                                        onChange={(e) => setReplyText(e.target.value)}
+                                        placeholder="Write a reply..."
+                                        className="resize-none text-sm min-h-[60px]"
+                                    />
+                                    <div className="flex justify-end gap-2">
+                                        <Button
+                                            type="submit"
+                                            size="sm"
+                                            className="h-8"
+                                            disabled={!replyText.trim()}
+                                        >
+                                            Reply
+                                        </Button>
+                                    </div>
+                                </form>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {comment.children && comment.children.length > 0 && (
-                    <div className="ml-8 mt-4">
+                    <div className="mt-2 space-y-4">
                         {comment.children.map(childComment => renderComment(childComment))}
                     </div>
                 )}
@@ -273,58 +345,51 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
     };
 
     return (
-        <div className="mt-4">
+        <div className="space-y-4">
             {error && (
-                <div className="text-red-500 mb-4">{error}</div>
+                <Alert variant="destructive" className="py-2">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
             )}
 
-            {loading ? (
-                <div className="text-gray-500">Loading comments...</div>
-            ) : (
-                <>
-                    {/* Comment form */}
-                    {user && (
-                        <form onSubmit={handleSubmitComment} className="mb-6">
-                            <textarea
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                                placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
-                                className="w-full p-2 border rounded mb-2 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
-                                rows={3}
-                            />
-                            <div className="flex justify-end gap-2">
-                                {replyTo && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setReplyTo(null)}
-                                        className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                                    >
-                                        Cancel
-                                    </button>
-                                )}
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                    disabled={!newComment.trim()}
-                                >
-                                    {replyTo ? 'Reply' : 'Comment'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
+            {user && (
+                <div className="flex-1 p-0.5">
+                    <form onSubmit={(e) => handleSubmitComment(e)} className="space-y-2">
+                        <Textarea
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Add a comment..."
+                            className="resize-none text-sm min-h-[80px]"
+                        />
+                        <div className="flex justify-end">
+                            <Button
+                                type="submit"
+                                size="sm"
+                                className="h-8 px-4"
+                                disabled={!commentText.trim()}
+                            >
+                                Comment
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            )}
 
-                    {/* Comments list */}
-                    <div className="space-y-4">
-                        {comments && comments.length > 0 ? (
-                            comments
-                                .filter(comment => !comment.parentId)
-                                .map(comment => renderComment(comment))
-                        ) : (
-                            <p className="text-gray-500">No comments yet</p>
-                        )}
+            <div className="space-y-4">
+                {loading ? (
+                    <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
-                </>
-            )}
+                ) : comments && comments.length > 0 ? (
+                    comments
+                        .filter(comment => !comment.parentId)
+                        .map(comment => renderComment(comment))
+                ) : (
+                    <p className="text-muted-foreground text-center py-2 text-sm">
+                        No comments yet
+                    </p>
+                )}
+            </div>
 
             {reportingComment && (
                 <ReportModal
@@ -332,6 +397,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                     contentType="comment"
                     onClose={() => setReportingComment(null)}
                     onSubmit={onUpdate}
+                    open={!!reportingComment}
                 />
             )}
         </div>

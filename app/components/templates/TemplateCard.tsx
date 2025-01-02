@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import EditTemplateModal from '../EditTemplateModal';
 import BlogPostsPopup from './BlogPostsPopup';
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowUpRight, Link2, BookOpen, Trash2 } from "lucide-react";
+import {
+    Popover,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface TemplateCardProps {
     template: {
@@ -33,6 +41,7 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
     const { user } = useAuth();
     const router = useRouter();
     const [showBlogPosts, setShowBlogPosts] = useState(false);
+    const [showCopyTooltip, setShowCopyTooltip] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState(false);
 
     const handleViewInEditor = () => {
@@ -46,92 +55,151 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
         const link = `${window.location.origin}/editor?templateId=${template.id}`;
         navigator.clipboard.writeText(link);
         setCopyFeedback(true);
-        setTimeout(() => setCopyFeedback(false), 2000);
+        setShowCopyTooltip(true);
+
+        setTimeout(() => {
+            setShowCopyTooltip(false);
+            setTimeout(() => {
+                setCopyFeedback(false);
+            }, 150);
+        }, 1000);
     };
 
-    const blogPostsButton = (
-        <div className="relative">
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setShowBlogPosts(!showBlogPosts);
-                }}
-                onBlur={() => setTimeout(() => setShowBlogPosts(false), 200)}
-                className={`px-2 py-1 text-xs rounded-full ${template.blogPosts.length > 0
-                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-200'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                    }`}
-            >
-                {template.blogPosts.length} Blog Post{template.blogPosts.length !== 1 ? 's' : ''}
-            </button>
-            <BlogPostsPopup
-                blogPosts={template.blogPosts}
-                isVisible={showBlogPosts}
-            />
-        </div>
-    );
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onDelete) {
+            onDelete(template.id);
+        }
+    };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col h-full">
-            <div className="p-4 flex-1">
+        <Card className="h-full flex flex-col">
+            <CardContent className="pt-6 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                    <h3 className="text-xl font-semibold">
                         {template.title}
                     </h3>
-                    <div className="flex items-center gap-2 relative">
+                    <div className="flex items-center gap-2">
                         {template.forked && (
-                            <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                            <Badge variant="secondary">
                                 Forked
-                            </span>
+                            </Badge>
                         )}
-                        <button
-                            onClick={handleCopyLink}
-                            className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                            {copyFeedback ? 'Copied!' : 'Copy Link'}
-                        </button>
-                        {blogPostsButton}
                     </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <span>by {template.author
-                        ? `${template.author.firstName} ${template.author.lastName}`
-                        : 'Unknown Author'
-                    }</span>
-                    {isOwner && (
-                        <span className="px-2 py-0.5 text-xs bg-green-500 text-white rounded-full">
-                            Your Template
-                        </span>
-                    )}
-                </div>
                 {template.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">
+                    <p className="text-sm text-muted-foreground mt-3 line-clamp-3">
                         {template.description}
                     </p>
                 )}
-                <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-200 rounded">
+
+                <div className="flex flex-wrap gap-2 mt-auto pt-3">
+                    <Badge variant="default" className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-200">
                         {template.language}
-                    </span>
+                    </Badge>
                     {template.tags.split(',').map((tag: string, index: number) => (
-                        <span
+                        <Badge
                             key={index}
-                            className="px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-200 rounded"
+                            variant="secondary"
+                            className="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-200"
                         >
                             {tag.trim()}
-                        </span>
+                        </Badge>
                     ))}
                 </div>
-            </div>
+            </CardContent>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
-                <button
-                    onClick={handleViewInEditor}
-                    className="w-3/4 mx-auto block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                    View in Code Editor
-                </button>
-            </div>
-        </div>
+            <CardFooter className="border-t py-2 flex justify-between items-center">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                    <span className="truncate">
+                        by {template.author
+                            ? `${template.author.firstName} ${template.author.lastName}`
+                            : 'Unknown Author'
+                        }
+                    </span>
+                    {isOwner && (
+                        <Badge variant="secondary" className="flex-shrink-0 bg-green-500">
+                            You
+                        </Badge>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-1 flex-shrink-0">
+                    {template.blogPosts.length > 0 && (
+                        <Popover open={showBlogPosts} onOpenChange={setShowBlogPosts}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 p-0 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300"
+                                            >
+                                                <BookOpen className="h-4 w-4" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {template.blogPosts.length} Blog Post{template.blogPosts.length !== 1 ? 's' : ''}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <BlogPostsPopup
+                                blogPosts={template.blogPosts}
+                                isVisible={showBlogPosts}
+                            />
+                        </Popover>
+                    )}
+
+                    <TooltipProvider>
+                        <Tooltip open={showCopyTooltip}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    onClick={handleCopyLink}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                                >
+                                    <Link2 className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {copyFeedback ? 'Copied!' : 'Copy template link'}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    onClick={handleViewInEditor}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                                >
+                                    <ArrowUpRight className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                View in Code Editor
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    {isOwner && (
+                        <Button
+                            onClick={handleDeleteClick}
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+            </CardFooter>
+        </Card>
     );
 }

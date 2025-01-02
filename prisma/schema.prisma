@@ -61,12 +61,12 @@ model BlogPost {
   author    User             @relation(fields: [authorId], references: [id])
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
-  comments  Comment[]
-  templates CodeTemplate[]
   tags      String
-  report    BlogPostReport[]
-  votes     UserVote[]
   hidden    Boolean          @default(false)
+  comments  Comment[] // Will cascade delete
+  votes     UserVote[] // Will cascade delete
+  reports   BlogPostReport[] // Will cascade delete
+  templates CodeTemplate[] // Many-to-many relationship, won't cascade delete
 }
 
 model UserVote {
@@ -74,7 +74,7 @@ model UserVote {
   userId     String
   user       User      @relation(fields: [userId], references: [id])
   blogPostId String?
-  blogPost   BlogPost? @relation(fields: [blogPostId], references: [id])
+  blogPost   BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
   commentId  String?
   comment    Comment?  @relation(fields: [commentId], references: [id])
   type       Int // 1 for UPVOTE, -1 for DOWNVOTE
@@ -86,7 +86,7 @@ model Comment {
   authorId   String
   author     User            @relation(fields: [authorId], references: [id])
   blogPostId String
-  blogPost   BlogPost        @relation(fields: [blogPostId], references: [id])
+  blogPost   BlogPost        @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   reports    CommentReport[]
@@ -104,7 +104,7 @@ model BlogPostReport {
   reporterId            String
   reporter              User      @relation(fields: [reporterId], references: [id])
   blogPostId            String?
-  blogPost              BlogPost? @relation(fields: [blogPostId], references: [id])
+  blogPost              BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
   createdAt             DateTime  @default(now())
 }
 

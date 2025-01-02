@@ -3,10 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Form from '../components/ui/Form';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -57,80 +66,105 @@ export default function SignupPage() {
     }
 
     return (
-        <main className="flex min-h-screen items-center justify-center px-4">
-            <div className="w-full max-w-md space-y-8">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold">Create an account</h1>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">
+        <main className="flex min-h-screen items-center justify-center px-4 bg-background">
+            <Card className="w-full max-w-md">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl text-center">
+                        Create an account
+                    </CardTitle>
+                    <CardDescription className="text-center">
                         Join Scriptorium today
-                    </p>
-                </div>
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {error && (
+                            <Alert variant="destructive">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
 
-                <Form onSubmit={handleSubmit} className="mt-8">
-                    {error && (
-                        <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4 text-red-600 dark:text-red-200">
-                            {error}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="firstName">First Name</Label>
+                                <Input
+                                    id="firstName"
+                                    name="firstName"
+                                    required
+                                    autoComplete="given-name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="lastName">Last Name</Label>
+                                <Input
+                                    id="lastName"
+                                    name="lastName"
+                                    required
+                                    autoComplete="family-name"
+                                />
+                            </div>
                         </div>
-                    )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="First Name"
-                            name="firstName"
-                            required
-                            autoComplete="given-name"
-                        />
-                        <Input
-                            label="Last Name"
-                            name="lastName"
-                            required
-                            autoComplete="family-name"
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                autoComplete="email"
+                            />
+                        </div>
 
-                    <Input
-                        label="Email"
-                        name="email"
-                        type="email"
-                        required
-                        autoComplete="email"
-                    />
+                        <div className="space-y-2">
+                            <Label htmlFor="phoneNumber">Phone Number</Label>
+                            <Input
+                                id="phoneNumber"
+                                name="phoneNumber"
+                                type="tel"
+                                required
+                                autoComplete="tel"
+                            />
+                        </div>
 
-                    <Input
-                        label="Phone Number"
-                        name="phoneNumber"
-                        type="tel"
-                        required
-                        autoComplete="tel"
-                    />
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                autoComplete="new-password"
+                            />
+                        </div>
 
-                    <Input
-                        label="Password"
-                        name="password"
-                        type="password"
-                        required
-                        autoComplete="new-password"
-                    />
-
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        isLoading={isLoading}
-                    >
-                        Sign up
-                    </Button>
-
-                    <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                        Already have an account?{' '}
-                        <Link
-                            href="/login"
-                            className="text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isLoading}
                         >
-                            Sign in
-                        </Link>
-                    </p>
-                </Form>
-            </div>
+                            {isLoading ? (
+                                <>
+                                    <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating account...
+                                </>
+                            ) : (
+                                'Sign up'
+                            )}
+                        </Button>
+
+                        <div className="text-center text-sm">
+                            Already have an account?{' '}
+                            <Link
+                                href="/login"
+                                className="font-medium text-primary hover:underline"
+                            >
+                                Sign in
+                            </Link>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </main>
     );
 } 

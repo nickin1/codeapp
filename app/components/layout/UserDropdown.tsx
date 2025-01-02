@@ -1,85 +1,67 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Button from '../ui/Button';
 import { useAuth } from '@/app/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function UserDropdown() {
-    const [isOpen, setIsOpen] = useState(false);
-    const { user, logout } = useAuth();
+    const { user, logout, isLoading } = useAuth();
     const router = useRouter();
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        }
-
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen]);
 
     const handleLogout = async () => {
         await logout();
-        setIsOpen(false);
         router.push('/login');
     };
 
+    // Don't render anything during the initial load
+    if (isLoading) {
+        return (
+            <div className="w-[68px] h-9" /> // Placeholder with same width as login button
+        );
+    }
+
     if (!user) {
         return (
-            <div className="flex space-x-2">
+            <div className="flex items-center gap-2">
                 <Link href="/login">
-                    <Button variant="ghost">Log in</Button>
+                    <Button variant="ghost" className="cursor-pointer">Log in</Button>
                 </Link>
                 <Link href="/signup">
-                    <Button variant="primary">Sign up</Button>
+                    <Button className="cursor-pointer">Sign up</Button>
                 </Link>
             </div>
         );
     }
 
     return (
-        <div className="relative" ref={dropdownRef}>
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-                <div className="w-8 h-8 flex-shrink-0">
-                    <img
-                        className="w-full h-full rounded-full object-cover"
-                        src={user.avatar || '/placeholder-avatar.png'}
-                        alt={`${user.firstName}'s avatar`}
-                    />
-                </div>
-                <span className="hidden md:block">
-                    {user.firstName} {user.lastName}
-                </span>
-                <span className="block md:hidden">
-                    {user.firstName} {user.lastName}
-                </span>
-            </button>
-
-            {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
-                    <div className="py-1">
-                        <Link href="/profile" className="dropdown-item">
-                            Profile
-                        </Link>
-                        <button onClick={handleLogout} className="dropdown-item-danger">
-                            Log out
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 h-auto cursor-pointer">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar || '/placeholder-avatar.png'} alt={`${user.firstName}'s avatar`} />
+                        <AvatarFallback>{user.firstName[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:block">
+                        {user.firstName} {user.lastName}
+                    </span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link href="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600 dark:text-red-400 cursor-pointer" onClick={handleLogout}>
+                    Log out
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 } 

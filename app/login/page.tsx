@@ -3,10 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Form from '../components/ui/Form';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -34,57 +43,71 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="flex min-h-screen items-center justify-center px-4">
-            <div className="w-full max-w-md space-y-8">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold">Welcome back</h1>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">
+        <main className="flex min-h-screen items-center justify-center px-4 bg-background">
+            <Card className="w-full max-w-md">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
+                    <CardDescription className="text-center">
                         Sign in to your account
-                    </p>
-                </div>
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {error && (
+                            <Alert variant="destructive">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
 
-                <Form onSubmit={handleSubmit} className="mt-8">
-                    {error && (
-                        <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4 text-red-600 dark:text-red-200">
-                            {error}
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                autoComplete="email"
+                            />
                         </div>
-                    )}
 
-                    <Input
-                        label="Email"
-                        name="email"
-                        type="email"
-                        required
-                        autoComplete="email"
-                    />
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                autoComplete="current-password"
+                            />
+                        </div>
 
-                    <Input
-                        label="Password"
-                        name="password"
-                        type="password"
-                        required
-                        autoComplete="current-password"
-                    />
-
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        isLoading={isLoading}
-                    >
-                        Sign in
-                    </Button>
-
-                    <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                        Don't have an account?{' '}
-                        <Link
-                            href="/signup"
-                            className="text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isLoading}
                         >
-                            Sign up
-                        </Link>
-                    </p>
-                </Form>
-            </div>
+                            {isLoading ? (
+                                <>
+                                    <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                                    Signing in...
+                                </>
+                            ) : (
+                                'Sign in'
+                            )}
+                        </Button>
+
+                        <div className="text-center text-sm">
+                            Don't have an account?{' '}
+                            <Link
+                                href="/signup"
+                                className="font-medium text-primary hover:underline"
+                            >
+                                Sign up
+                            </Link>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </main>
     );
 }

@@ -1,5 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { BookOpen } from "lucide-react";
 
 interface BlogPostsPopupProps {
     blogPosts: Array<{
@@ -7,37 +15,29 @@ interface BlogPostsPopupProps {
         title: string;
     }>;
     isVisible: boolean;
-    position?: {
-        top?: number;
-        left?: number;
-    };
 }
 
-export default function BlogPostsPopup({ blogPosts, isVisible, position }: BlogPostsPopupProps) {
-    if (!isVisible || blogPosts.length === 0) return null;
+export default function BlogPostsPopup({ blogPosts, isVisible }: BlogPostsPopupProps) {
+    if (blogPosts.length === 0) return null;
 
     return (
-        <div
-            className="absolute z-50 w-64 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5"
-            style={{
-                top: position?.top ?? 0,
-                left: position?.left ?? 0,
-            }}
-        >
-            <div className="py-1 max-h-48 overflow-y-auto">
-                <div className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Referenced in Blog Posts:
+        <PopoverContent className="w-80 p-0" align="end">
+            <div className="px-4 py-2 border-b">
+                <div className="text-xs text-muted-foreground">
+                    Mentioned in {blogPosts.length} posts:
                 </div>
+            </div>
+            <ScrollArea className="max-h-[200px]">
                 {blogPosts.map((post) => (
                     <Link
                         key={post.id}
                         href={`/blog?postId=${post.id}`}
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="block px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
                     >
                         {post.title}
                     </Link>
                 ))}
-            </div>
-        </div>
+            </ScrollArea>
+        </PopoverContent>
     );
 } 

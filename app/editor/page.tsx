@@ -1,14 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import dynamic from 'next/dynamic';
-import LanguageSelect from '@/app/components/LanguageSelect';
-import ExecutionOutput from '@/app/components/ExecutionOutput';
-import SaveTemplateModal from '@/app/components/SaveTemplateModal';
-import Button from '@/app/components/ui/Button';
-import { DEFAULT_CODE } from '@/lib/defaultCode';
 import { useSearchParams } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import LanguageSelect from '@/app/components/editor/LanguageSelect';
+import ExecutionOutput from '@/app/components/editor/ExecutionOutput';
+import SaveTemplateModal from '@/app/components/SaveTemplateModal';
+import { DEFAULT_CODE } from '@/lib/defaultCode';
+import { ReloadIcon } from '@radix-ui/react-icons';
+import { useTheme } from '@/app/context/ThemeContext';
 
 interface OutputItem {
     type: 'error' | 'stdout' | 'stderr' | 'status';
@@ -21,15 +28,44 @@ interface TemplateActions {
     canFork: boolean;
 }
 
-const CodeEditor = dynamic(() => import('@/app/components/CodeEditor'), {
-    ssr: false
+const CodeEditor = dynamic(() => import('@/app/components/editor/CodeEditor'), {
+    ssr: false,
+    loading: () => (
+        <Card className="overflow-hidden bg-background">
+            <div className="h-[500px] bg-muted p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-[60%] bg-muted-foreground/20" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-[75%] bg-muted-foreground/20" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-[40%] bg-muted-foreground/20" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-[55%] bg-muted-foreground/20" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-[68%] bg-muted-foreground/20" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-[45%] bg-muted-foreground/20" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-[80%] bg-muted-foreground/20" />
+                </div>
+            </div>
+        </Card>
+    ),
 });
 
 export default function EditorPage() {
+    const { theme } = useTheme();
     const { user } = useAuth();
     const searchParams = useSearchParams();
     const templateId = searchParams?.get('templateId');
     const [isEditingTemplate, setIsEditingTemplate] = useState(false);
+    const [isLoadingTemplate, setIsLoadingTemplate] = useState(!!templateId);
     const [templateData, setTemplateData] = useState<{
         id: string;
         title: string;
@@ -58,6 +94,7 @@ export default function EditorPage() {
     useEffect(() => {
         const fetchTemplate = async () => {
             if (!templateId) return;
+            setIsLoadingTemplate(true);
 
             try {
                 const response = await fetch(`/api/templates/${templateId}`);
@@ -83,6 +120,8 @@ export default function EditorPage() {
                 }
             } catch (error) {
                 console.error('Error fetching template:', error);
+            } finally {
+                setIsLoadingTemplate(false);
             }
         };
 
@@ -212,24 +251,48 @@ export default function EditorPage() {
         setTimeout(() => setCopyFeedback(false), 2000);
     };
 
+    if (isLoadingTemplate) {
+        return (
+            <main className="flex-1 p-4 bg-background">
+                <div className="max-w-7xl mx-auto space-y-4">
+                    <Card className="bg-muted">
+                        <CardContent className="p-4 space-y-4">
+                            <div className="space-y-2">
+                                <Skeleton className="h-7 w-[250px] bg-muted-foreground/20" />
+                                <Skeleton className="h-4 w-full max-w-[600px] bg-muted-foreground/20" />
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <Skeleton className="h-5 w-16 bg-muted-foreground/20" />
+                                <Skeleton className="h-5 w-20 bg-muted-foreground/20" />
+                                <Skeleton className="h-5 w-14 bg-muted-foreground/20" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
+        );
+    }
+
     return (
-        <main className="flex-1 p-4">
+        <main className="flex-1 p-4 bg-background">
             <div className="max-w-7xl mx-auto space-y-4">
                 {isEditingTemplate && templateData && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                        <h1 className="text-xl font-bold mb-2">
-                            {templateActions.canEdit ? 'Editing Template: ' : 'Viewing Template: '}
-                            {templateData.title}
-                        </h1>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{templateData.description}</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {templateData.tags.split(',').map((tag, index) => (
-                                <span key={index} className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 rounded">
-                                    {tag.trim()}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
+                    <Card className="bg-muted">
+                        <CardContent className="p-4 space-y-2">
+                            <h1 className="text-xl font-bold text-foreground">
+                                {templateActions.canEdit ? 'Editing Template: ' : 'Viewing Template: '}
+                                {templateData.title}
+                            </h1>
+                            <p className="text-sm text-muted-foreground">{templateData.description}</p>
+                            <div className="flex flex-wrap gap-2">
+                                {templateData.tags.split(',').map((tag, index) => (
+                                    <Badge key={index} variant="secondary">
+                                        {tag.trim()}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
 
                 <div className="flex justify-between items-center">
@@ -241,16 +304,21 @@ export default function EditorPage() {
                         />
                         {isEditingTemplate && (
                             <Button
-                                variant="secondary"
+                                variant="outline"
                                 onClick={handleExitTemplateView}
+                                className="text-foreground"
                             >
                                 Exit Template View
                             </Button>
                         )}
                     </div>
-                    <div className="space-x-2">
-                        <Button onClick={handleExecute} isLoading={isExecuting}>
-                            Run Code
+                    <div className="space-x-2 flex items-center">
+                        <Button
+                            onClick={handleExecute}
+                            disabled={isExecuting}
+                        >
+                            {isExecuting && <ReloadIcon className="h-4 w-4 mr-2 animate-spin" />}
+                            {isExecuting ? "Running..." : "Run Code"}
                         </Button>
                         {user && (
                             <>
@@ -258,15 +326,16 @@ export default function EditorPage() {
                                     <>
                                         {templateActions.canEdit && (
                                             <Button
-                                                variant="secondary"
+                                                variant="outline"
                                                 onClick={() => setShowSaveModal(true)}
+                                                className="text-foreground"
                                             >
                                                 Update Template
                                             </Button>
                                         )}
                                         {templateActions.canDelete && (
                                             <Button
-                                                variant="danger"
+                                                variant="destructive"
                                                 onClick={handleDelete}
                                             >
                                                 Delete Template
@@ -274,23 +343,26 @@ export default function EditorPage() {
                                         )}
                                         {templateActions.canFork && (
                                             <Button
-                                                variant="secondary"
+                                                variant="outline"
                                                 onClick={handleFork}
+                                                className="text-foreground"
                                             >
                                                 Fork Template
                                             </Button>
                                         )}
                                         <Button
-                                            variant="secondary"
+                                            variant="outline"
                                             onClick={handleCopyLink}
+                                            className="text-foreground"
                                         >
                                             {copyFeedback ? 'Copied!' : 'Copy Link'}
                                         </Button>
                                     </>
                                 ) : (
                                     <Button
-                                        variant="secondary"
+                                        variant="outline"
                                         onClick={() => setShowSaveModal(true)}
+                                        className="text-foreground"
                                     >
                                         Save as Template
                                     </Button>
@@ -302,20 +374,22 @@ export default function EditorPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="space-y-4">
-                        <CodeEditor
-                            value={code}
-                            onChange={setCode}
-                            language={language}
-                        />
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Standard Input
-                            </label>
-                            <textarea
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg" />
+                            <CodeEditor
+                                value={code}
+                                onChange={setCode}
+                                language={language}
+                                theme={theme}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-foreground">Standard Input</Label>
+                            <Textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                className="w-full h-32 rounded-md border bg-transparent p-2"
                                 placeholder="Enter program input here..."
+                                className="font-mono bg-background/50 backdrop-blur-sm text-foreground border-border"
                             />
                         </div>
                     </div>

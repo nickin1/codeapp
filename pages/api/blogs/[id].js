@@ -105,23 +105,6 @@ export default async function handler(req, res) {
         const { title, content, templateIds, tags } = req.body;
 
         try {
-            // const blogPost = await prisma.blogPost.findUnique({
-            //     where: {
-            //         id,
-            //     },
-            // });
-
-            // if (!blogPost) {
-            //     return res.status(404).json({ error: "Blog post not found" });
-            // }
-
-            // await prisma.blogPost.delete({
-            //     where: {
-            //         id,
-            //     },
-            // });
-
-
             const blogPost = await prisma.blogPost.findUnique({
                 where: { id },
             });
@@ -140,6 +123,8 @@ export default async function handler(req, res) {
                 return res.status(403).json({ error: "This post is hidden, you do not have permission to edit it" });
             }
 
+            console.log("RECEIVED TAGS FROM CLIENT:", tags);
+
             const updatedBlogPost = await prisma.blogPost.update({
                 where: {
                     id
@@ -148,17 +133,20 @@ export default async function handler(req, res) {
                     title,
                     content,
                     templates: templateIds ? {
-                        set: templateIds.map(id => ({ id })) // Sets templates to new list
+                        set: templateIds.map(id => ({ id }))
                     } : undefined,
-                    tags: tags ? tags : undefined
+                    // Ensure tags is always a string, even if empty
+                    tags: tags || ''
                 },
                 include: {
                     author: true,
                     comments: true,
                     templates: true,
-                    report: true,
+                    reports: true,
                 },
-            })
+            });
+
+            console.log("DEBUG: Updated blog post:", updatedBlogPost);
 
             return res.status(200).json(updatedBlogPost);
         } catch (error) {
@@ -176,6 +164,9 @@ export default async function handler(req, res) {
         try {
             const blogPost = await prisma.blogPost.findUnique({
                 where: { id },
+                include: {
+                    templates: true
+                }
             });
 
             if (!blogPost) {
@@ -183,30 +174,31 @@ export default async function handler(req, res) {
                 return res.status(404).json({ error: "Blog post not found" });
             }
 
-            console.log(`Found blog post:`, blogPost);
+            // Log template relationships before deletion
+            console.log(`Templates linked to blog post before deletion:`,
+                blogPost.templates.map(t => t.id));
 
             // Authorization check
             const authResult = await authorizeRequest(req, blogPost.authorId);
-            console.log(`Authorization result:`, authResult);
             if (!authResult.authorized) {
-                console.log(`Authorization failed for user trying to delete blog post ${id}`);
                 return res.status(403).json({ error: authResult.error });
             }
 
-            console.log(`Deleting blog post ${id}...`);
+            // Delete the blog post (Prisma will handle cleaning up the join table)
             const deletedBlogPost = await prisma.blogPost.delete({
-                where: { id }
+                where: { id },
+                include: {
+                    comments: true,
+                    votes: true,
+                    templates: true
+                }
             });
 
             console.log(`Successfully deleted blog post:`, deletedBlogPost);
             return res.status(200).json(deletedBlogPost);
         } catch (error) {
             console.error(`Error deleting blog post ${id}:`, error);
-            if (error.code === "P2025") {
-                res.status(404).json({ error: "Blog post not found" });
-            } else {
-                res.status(500).json({ error: "Failed to delete blog post" });
-            }
+            return res.status(500).json({ error: "Failed to delete blog post" });
         }
     }
     else {

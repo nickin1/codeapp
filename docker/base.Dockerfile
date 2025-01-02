@@ -10,4 +10,4 @@ RUN apt-get update && apt-get install -y \
 # Create a non-root user
 RUN useradd -m -d /home/coderunner coderunner
 USER coderunner
-WORKDIR /home/coderunner 
+WORKDIR /home/coderunner  

@@ -1,14 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatDistance } from 'date-fns';
 import CommentSection from './CommentSection';
 import { useAuth } from '../context/AuthContext';
 import type { BlogPost } from '../types/blog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypePrism from 'rehype-prism-plus';
+import rehypeRaw from 'rehype-raw';
+import 'prismjs/themes/prism-tomorrow.css';
 import BlogForm from './BlogForm';
-import ReportModal from './ReportModal';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ThumbsUp, ThumbsDown, MessageSquare, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface BlogPostModalProps {
     post: BlogPost;
@@ -18,10 +41,28 @@ interface BlogPostModalProps {
 
 export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: BlogPostModalProps) {
     const { user } = useAuth();
+    const [isOpen, setIsOpen] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [currentPost, setCurrentPost] = useState(initialPost);
     const [votes, setVotes] = useState(initialPost.votes);
-    const [showReportModal, setShowReportModal] = useState(false);
+    const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+    const [showComments, setShowComments] = useState(false);
+    const [commentsLoaded, setCommentsLoaded] = useState(false);
+
+    // Pre-load comments
+    useEffect(() => {
+        // Small delay to ensure smooth modal opening
+        const timer = setTimeout(() => {
+            setCommentsLoaded(true);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    const handleClose = () => {
+        setIsOpen(false);
+        setTimeout(onClose, 300);
+    };
 
     const handleVote = async (type: number) => {
         if (!user) return;
@@ -42,21 +83,18 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
             if (response.ok) {
                 const data = await response.json();
 
-                // Update votes based on the response
                 if (data.message === "Vote removed") {
-                    // Remove the vote
                     setVotes(currentVotes =>
                         currentVotes.filter(vote => vote.userId !== user.id)
                     );
                 } else {
-                    // Add or update the vote
                     setVotes(currentVotes => {
                         const newVotes = currentVotes.filter(vote => vote.userId !== user.id);
                         return [...newVotes, data];
                     });
                 }
 
-                onUpdate(); // Still update the parent component
+                onUpdate();
             }
         } catch (error) {
             console.error('Error voting on post:', error);
@@ -84,194 +122,257 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
         }
     };
 
+    const handleDelete = async () => {
+        try {
+            const response = await fetch(`/api/blogs/${currentPost.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                },
+            });
+            if (response.ok) {
+                onClose();
+                onUpdate();
+            }
+        } catch (error) {
+            console.error('Error deleting post:', error);
+        }
+    };
+
     const score = votes.reduce((acc, vote) => acc + vote.type, 0);
     const userVote = user ? votes.find(vote => vote.userId === user.id)?.type : 0;
 
+    if (isEditing) {
+        return (
+            <Dialog open={isOpen} onOpenChange={handleClose}>
+                <DialogContent className="max-w-6xl">
+                    <BlogForm
+                        post={currentPost}
+                        open={isEditing}
+                        onClose={() => setIsEditing(false)}
+                        onSubmit={(updatedPost) => {
+                            setCurrentPost(updatedPost);
+                            setIsEditing(false);
+                            onUpdate();
+                        }}
+                    />
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
     return (
-        <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-            onClick={onClose}
-        >
-            <div
-                className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex justify-between items-start mb-4">
-                    <div>
+        <>
+            <Dialog open={isOpen} onOpenChange={handleClose}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-2xl font-bold dark:text-white">{currentPost.title}</h2>
+                            <DialogTitle className="text-xl">{currentPost.title}</DialogTitle>
                             {currentPost.hidden && (
-                                <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm">Hidden</span>
+                                <Badge variant="destructive" className="text-xs">Hidden</Badge>
                             )}
                         </div>
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="text-sm text-gray-500">
-                                Posted by {currentPost.author.firstName} {currentPost.author.lastName} •
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div>
+                                Posted by {currentPost.author.firstName} {currentPost.author.lastName} •{' '}
                                 {formatDistance(new Date(currentPost.createdAt), new Date(), { addSuffix: true })}
                             </div>
-                            {user?.id === currentPost.authorId && (
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setIsEditing(true)}
-                                        disabled={currentPost.hidden}
-                                        className={`px-4 py-2 rounded transition-colors ${currentPost.hidden
-                                            ? 'bg-gray-300 cursor-not-allowed'
-                                            : 'bg-blue-500 text-white hover:bg-blue-600'
-                                            }`}
+                            <div className="flex items-center gap-1.5">
+                                {user?.id === currentPost.authorId && (
+                                    <>
+                                        <Button
+                                            onClick={() => setIsEditing(true)}
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 gap-1.5"
+                                            disabled={currentPost.hidden}
+                                        >
+                                            <Edit className="h-3.5 w-3.5" />
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            onClick={() => setShowDeleteAlert(true)}
+                                            variant="destructive"
+                                            size="sm"
+                                            className="h-7 gap-1.5"
+                                            disabled={currentPost.hidden}
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                            Delete
+                                        </Button>
+                                    </>
+                                )}
+                                {user?.isAdmin && (
+                                    <Button
+                                        onClick={() => handleHideContent(currentPost.id, 'blogPost', !currentPost.hidden)}
+                                        variant={currentPost.hidden ? "default" : "destructive"}
+                                        size="sm"
+                                        className="h-7 gap-1.5"
                                     >
-                                        Edit Post
-                                    </button>
-                                    <button
-                                        onClick={async () => {
-                                            if (window.confirm('Are you sure you want to delete this post?')) {
-                                                const response = await fetch(`/api/blogs/${currentPost.id}`, {
-                                                    method: 'DELETE',
-                                                    headers: {
-                                                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-                                                    },
-                                                });
-                                                if (response.ok) {
-                                                    onClose();
-                                                    onUpdate();
-                                                }
-                                            }
-                                        }}
-                                        disabled={currentPost.hidden}
-                                        className={`px-4 py-2 rounded transition-colors ${currentPost.hidden
-                                            ? 'bg-gray-300 cursor-not-allowed'
-                                            : 'bg-red-500 text-white hover:bg-red-600'
-                                            }`}
-                                    >
-                                        Delete
-                                    </button>
+                                        {currentPost.hidden ? (
+                                            <>
+                                                <Eye className="h-3.5 w-3.5" />
+                                                Unhide
+                                            </>
+                                        ) : (
+                                            <>
+                                                <EyeOff className="h-3.5 w-3.5" />
+                                                Hide
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="flex gap-3 mt-3">
+                        {/* Voting */}
+                        <div className="flex flex-col items-center gap-0.5">
+                            <Button
+                                onClick={() => handleVote(1)}
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                    "h-7 w-7 p-0",
+                                    userVote === 1 && "text-primary"
+                                )}
+                                disabled={!user}
+                            >
+                                <ThumbsUp className="h-3.5 w-3.5" />
+                            </Button>
+                            <span className="text-sm font-medium">{score}</span>
+                            <Button
+                                onClick={() => handleVote(-1)}
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                    "h-7 w-7 p-0",
+                                    userVote === -1 && "text-destructive"
+                                )}
+                                disabled={!user}
+                            >
+                                <ThumbsDown className="h-3.5 w-3.5" />
+                            </Button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                            <div className="prose dark:prose-invert max-w-none mb-4">
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    rehypePlugins={[rehypeRaw, [rehypePrism, { showLineNumbers: true }]]}
+                                    className="markdown-content"
+                                >
+                                    {currentPost.content}
+                                </ReactMarkdown>
+                            </div>
+
+                            {/* Tags */}
+                            {currentPost.tags && currentPost.tags.split(',').filter(tag => tag.trim()).length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mb-4">
+                                    {currentPost.tags.split(',').map((tag) => (
+                                        <Badge
+                                            key={tag}
+                                            variant="secondary"
+                                            className="text-xs"
+                                        >
+                                            {tag.trim()}
+                                        </Badge>
+                                    ))}
                                 </div>
                             )}
-                            {user?.isAdmin && (
-                                <button
-                                    onClick={() => handleHideContent(currentPost.id, 'blogPost', !currentPost.hidden)}
-                                    className={`ml-4 px-3 py-1 rounded ${currentPost.hidden
-                                        ? 'bg-green-500 hover:bg-green-600'
-                                        : 'bg-red-500 hover:bg-red-600'} text-white transition-colors`}
-                                >
-                                    {currentPost.hidden ? 'Unhide' : 'Hide'}
-                                </button>
+
+                            {/* Templates */}
+                            {(currentPost.templates?.length ?? 0) > 0 && (
+                                <div className="mb-4">
+                                    <h3 className="text-sm font-medium mb-1.5">Related Templates:</h3>
+                                    <div className="flex gap-2">
+                                        {currentPost.templates?.map((template) => (
+                                            <Button
+                                                key={template.id}
+                                                variant="link"
+                                                className="h-auto p-0 text-sm"
+                                                asChild
+                                            >
+                                                <a
+                                                    href={`/templates/${template.id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    {template.title}
+                                                </a>
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
 
-                {/* Voting */}
-                <div className="flex items-center gap-2 mb-4">
-                    <button
-                        onClick={() => handleVote(1)}
-                        className={`p-1 ${userVote === 1 ? 'text-blue-500' : 'text-gray-400'}`}
-                        disabled={!user}
-                    >
-                        ▲
-                    </button>
-                    <span className="text-sm font-medium">{score}</span>
-                    <button
-                        onClick={() => handleVote(-1)}
-                        className={`p-1 ${userVote === -1 ? 'text-red-500' : 'text-gray-400'}`}
-                        disabled={!user}
-                    >
-                        ▼
-                    </button>
-                    {user && (
-                        <button
-                            onClick={() => setShowReportModal(true)}
-                            className="text-red-500 hover:text-red-600 text-sm"
+                    {/* Comments section - moved outside the flex container */}
+                    <div className="border-t pt-3 mt-4">
+                        <Button
+                            onClick={() => setShowComments(!showComments)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 gap-1.5 text-sm"
                         >
-                            Report
-                        </button>
-                    )}
-                </div>
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {showComments ? 'Hide Comments' : 'Show Comments'}
+                        </Button>
 
-                {/* Content */}
-                <div className="prose dark:prose-invert max-w-none mb-6">
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        className="markdown-content"
-                    >
-                        {currentPost.content}
-                    </ReactMarkdown>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-6">
-                    {currentPost.tags.split(',').map((tag) => (
-                        <span
-                            key={tag}
-                            className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-sm"
-                        >
-                            {tag.trim()}
-                        </span>
-                    ))}
-                </div>
-
-                {/* Templates (if any) */}
-                {currentPost.templates && currentPost.templates.length > 0 && (
-                    <div className="mb-6">
-                        <h3 className="text-lg font-semibold mb-2 dark:text-white">Related Templates</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {currentPost.templates.map(template => (
-                                <span
-                                    key={template.id}
-                                    className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-200 px-2 py-1 rounded text-sm"
+                        <AnimatePresence initial={false}>
+                            {showComments && commentsLoaded && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{
+                                        opacity: 1,
+                                        height: "auto",
+                                        transition: {
+                                            height: { duration: 0.3 },
+                                            opacity: { duration: 0.3, delay: 0.1 }
+                                        }
+                                    }}
+                                    exit={{
+                                        opacity: 0,
+                                        height: 0,
+                                        transition: {
+                                            height: { duration: 0.3 },
+                                            opacity: { duration: 0.2 }
+                                        }
+                                    }}
+                                    className="overflow-hidden"
                                 >
-                                    {template.title}
-                                </span>
-                            ))}
-                        </div>
+                                    <div className="mt-3">
+                                        <CommentSection
+                                            postId={currentPost.id}
+                                            onUpdate={onUpdate}
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                )}
+                </DialogContent>
+            </Dialog>
 
-                {/* Comments Section */}
-                <div className="border-t dark:border-gray-700 pt-6">
-                    <h3 className="text-lg font-semibold mb-4 dark:text-white">Comments</h3>
-                    <CommentSection postId={currentPost.id} onUpdate={onUpdate} />
-                </div>
-
-                {/* Edit Modal */}
-                {isEditing && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div onClick={e => e.stopPropagation()} className="w-full max-w-2xl">
-                            <BlogForm
-                                post={currentPost}
-                                onClose={() => setIsEditing(false)}
-                                onSubmit={async () => {
-                                    // Fetch the updated post
-                                    const response = await fetch(`/api/blogs/${currentPost.id}`);
-                                    if (response.ok) {
-                                        const updatedPost = await response.json();
-                                        setCurrentPost(updatedPost);
-                                        setIsEditing(false);
-                                        onUpdate(); // Still update the parent component
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {showReportModal && (
-                    <ReportModal
-                        contentId={currentPost.id}
-                        contentType="blogPost"
-                        onClose={() => setShowReportModal(false)}
-                        onSubmit={onUpdate}
-                    />
-                )}
-            </div>
-        </div>
+            <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your post.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 } 

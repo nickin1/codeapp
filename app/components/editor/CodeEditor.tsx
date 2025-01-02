@@ -3,12 +3,13 @@
 import { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import { useTheme } from '@/app/context/ThemeContext';
-import { getLanguageById } from '@/lib/languages';
+import { Card } from "@/components/ui/card";
 
 interface CodeEditorProps {
     value: string;
     onChange: (value: string) => void;
     language: string;
+    theme?: 'light' | 'dark';
 }
 
 export default function CodeEditor({ value, onChange, language }: CodeEditorProps) {
@@ -17,11 +18,44 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     const { theme } = useTheme();
 
     useEffect(() => {
+        // Define custom themes
+        monaco.editor.defineTheme('custom-light', {
+            base: 'vs',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#00000000',
+                'focusBorder': '#00000000',
+                'editorWidget.border': '#00000000',
+                'editor.lineHighlightBorder': '#00000000',
+                'editor.selectionBackground': '#add6ff80',
+                'editor.inactiveSelectionBackground': '#00000000',
+                'editorBracketMatch.border': '#00000000',
+                'editorOverviewRuler.border': '#00000000'
+            }
+        });
+
+        monaco.editor.defineTheme('custom-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#00000000',
+                'focusBorder': '#00000000',
+                'editorWidget.border': '#00000000',
+                'editor.lineHighlightBorder': '#00000000',
+                'editor.selectionBackground': '#264f7880',
+                'editor.inactiveSelectionBackground': '#00000000',
+                'editorBracketMatch.border': '#00000000',
+                'editorOverviewRuler.border': '#00000000'
+            }
+        });
+
         if (editorRef.current) {
             monacoEditorRef.current = monaco.editor.create(editorRef.current, {
                 value,
                 language: getMonacoLanguage(language),
-                theme: theme === 'dark' ? 'vs-dark' : 'vs-light',
+                theme: theme === 'dark' ? 'custom-dark' : 'custom-light',
                 automaticLayout: true,
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,
@@ -42,7 +76,7 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
 
     useEffect(() => {
         if (monacoEditorRef.current) {
-            monaco.editor.setTheme(theme === 'dark' ? 'vs-dark' : 'vs-light');
+            monaco.editor.setTheme(theme === 'dark' ? 'custom-dark' : 'custom-light');
         }
     }, [theme]);
 
@@ -80,6 +114,8 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     };
 
     return (
-        <div ref={editorRef} className="h-[500px] border rounded-md overflow-hidden dark:border-gray-700" />
+        <Card className="overflow-hidden">
+            <div ref={editorRef} className="h-[500px]" />
+        </Card>
     );
 }

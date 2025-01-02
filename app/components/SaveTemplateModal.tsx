@@ -2,7 +2,19 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
-import Button from '@/app/components/ui/Button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ReloadIcon } from '@radix-ui/react-icons';
+import TagInput from '@/app/components/TagInput';
 
 interface SaveTemplateModalProps {
     code: string;
@@ -29,7 +41,9 @@ export default function SaveTemplateModal({
     const { user } = useAuth();
     const [title, setTitle] = useState(initialData?.title || '');
     const [description, setDescription] = useState(initialData?.description || '');
-    const [tags, setTags] = useState(initialData?.tags || '');
+    const [tags, setTags] = useState<string[]>(
+        initialData?.tags ? initialData.tags.split(',').map(tag => tag.trim()) : []
+    );
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -69,10 +83,7 @@ export default function SaveTemplateModal({
                     description,
                     code,
                     language,
-                    tags: tags.split(',')
-                        .map(tag => tag.trim())
-                        .filter(tag => tag !== '')
-                        .join(','),
+                    tags: tags.join(','),
                     authorId: user.id,
                     ...(isFork && {
                         userId: user.id,
@@ -80,7 +91,7 @@ export default function SaveTemplateModal({
                         newDescription: description,
                         newCode: code,
                         newLanguage: language,
-                        newTags: tags,
+                        newTags: tags.join(','),
                     })
                 }),
             });
@@ -106,63 +117,60 @@ export default function SaveTemplateModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-                <h2 className="text-2xl font-bold mb-4">{getModalTitle()}</h2>
+        <Dialog open={true} onOpenChange={() => onClose()}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{getModalTitle()}</DialogTitle>
+                </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {error && (
-                        <div className="text-red-500 text-sm">{error}</div>
+                        <Alert variant="destructive">
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Title
-                        </label>
-                        <input
-                            type="text"
+                    <div className="space-y-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                            id="title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
-                            className="w-full rounded-md border bg-transparent px-3 py-2"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Description
-                        </label>
-                        <textarea
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                            id="description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             required
-                            className="w-full rounded-md border bg-transparent px-3 py-2 h-32"
+                            className="h-32"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Tags (comma-separated)
-                        </label>
-                        <input
-                            type="text"
+                    <div className="space-y-2">
+                        <Label htmlFor="tags">Tags</Label>
+                        <TagInput
                             value={tags}
-                            onChange={(e) => setTags(e.target.value)}
-                            className="w-full rounded-md border bg-transparent px-3 py-2"
-                            placeholder="e.g., algorithms, sorting, recursion"
+                            onChange={setTags}
+                            placeholder="Press space or enter to add tags"
                         />
                     </div>
 
                     <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="secondary" onClick={onClose}>
+                        <Button type="button" variant="outline" onClick={onClose}>
                             Cancel
                         </Button>
-                        <Button type="submit" isLoading={isSaving}>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
                             {isEditing ? 'Update' : isFork ? 'Fork' : 'Save'} Template
                         </Button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 } 

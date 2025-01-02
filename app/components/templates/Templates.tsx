@@ -3,6 +3,21 @@ import { useAuth } from '../../context/AuthContext';
 import TemplateCard from './TemplateCard';
 import { useDebounce } from '@/app/hooks/useDebounce';
 import SearchBar from '../SearchBar';
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Template {
   id: string;
@@ -38,6 +53,7 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
   const [totalPages, setTotalPages] = useState(1);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [showOwnedOnly, setShowOwnedOnly] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
   const fetchTemplates = async () => {
     try {
@@ -75,10 +91,14 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
   }, [user, debouncedSearchTerm, currentPage, userOnly, showOwnedOnly]);
 
   const handleDelete = async (templateId: string) => {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+    setTemplateToDelete(templateId);
+  };
+
+  const confirmDelete = async () => {
+    if (!templateToDelete) return;
 
     try {
-      const response = await fetch(`/api/templates/${templateId}`, {
+      const response = await fetch(`/api/templates/${templateToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -89,10 +109,11 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
         throw new Error('Failed to delete template');
       }
 
-      setTemplates(templates.filter(template => template.id !== templateId));
+      setTemplates(templates.filter(template => template.id !== templateToDelete));
     } catch (error) {
       console.error('Error deleting template:', error);
-      alert('Failed to delete template. Please try again.');
+    } finally {
+      setTemplateToDelete(null);
     }
   };
 
@@ -105,62 +126,70 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
     const pageNumbers = [];
     for (let i = 1; i <= totalPages; i++) {
       pageNumbers.push(
-        <button
+        <Button
           key={i}
           onClick={() => setCurrentPage(i)}
-          className={`px-3 py-1 rounded ${currentPage === i
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+          variant={currentPage === i ? "default" : "outline"}
+          size="sm"
         >
           {i}
-        </button>
+        </Button>
       );
     }
 
     return (
       <div className="flex justify-center items-center space-x-2 mt-4">
-        <button
+        <Button
           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+          variant="outline"
+          size="sm"
         >
           Previous
-        </button>
+        </Button>
         {pageNumbers}
-        <button
+        <Button
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+          variant="outline"
+          size="sm"
         >
           Next
-        </button>
+        </Button>
       </div>
     );
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="max-w-md mx-auto">
-        <SearchBar onSearch={handleSearch} />
+    <div className="p-4 space-y-4 bg-background">
+      <div className="flex items-center gap-4">
+        <div className="w-72">
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search templates..."
+          />
+        </div>
         {user && (
-          <div className="mt-2 flex items-center">
-            <input
-              type="checkbox"
+          <div className="flex items-center space-x-2 whitespace-nowrap">
+            <Checkbox
               id="ownedOnly"
               checked={showOwnedOnly}
-              onChange={(e) => setShowOwnedOnly(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              onCheckedChange={(checked) => setShowOwnedOnly(checked as boolean)}
             />
-            <label htmlFor="ownedOnly" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-              Show only my templates
-            </label>
+            <Label htmlFor="ownedOnly" className="text-sm text-muted-foreground">
+              My templates
+            </Label>
           </div>
         )}
       </div>
 
       {loading ? (
-        <div className="text-center py-4">Loading...</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-[300px] rounded-lg" />
+          ))}
+        </div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -177,12 +206,29 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
           {totalPages > 1 && renderPagination()}
 
           {templates.length === 0 && (
-            <div className="text-center py-4 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No templates found. {!userOnly && "Try adjusting your search."}
             </div>
           )}
         </>
       )}
+
+      <AlertDialog open={!!templateToDelete} onOpenChange={(open) => !open && setTemplateToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this template? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
