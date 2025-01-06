@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         }
 
         // Authorization check
-        const authResult = await authorizeRequest(req, template.authorId);
+        const authResult = await authorizeRequest(req, template.authorId, res);
         if (!authResult.authorized) {
             return res.status(403).json({ error: authResult.error });
         }
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
                     description,
                     code,
                     language,
-                    tags
+                    tags: tags.join(','),
                 },
                 include: {
                     author: true,
@@ -93,7 +93,7 @@ export default async function handler(req, res) {
         console.log(`Found template:`, template);
 
         // Authorization check
-        const authResult = await authorizeRequest(req, template.authorId);
+        const authResult = await authorizeRequest(req, template.authorId, res);
         console.log(`Authorization result:`, authResult);
         if (!authResult.authorized) {
             console.log(`Authorization failed for user trying to delete template ${id}`);

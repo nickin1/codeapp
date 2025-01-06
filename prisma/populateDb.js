@@ -210,14 +210,10 @@ async function main() {
         // Create 20 users (plus admin from seed.js makes 21)
         const users = [];
         for (let i = 1; i <= 20; i++) {
-            const hashedPassword = await bcrypt.hash(`password${i}`, 10);
             const user = await prisma.user.create({
                 data: {
                     email: `user${i}@example.com`,
-                    password: hashedPassword,
-                    firstName: `FirstName${i}`,
-                    lastName: `LastName${i}`,
-                    phoneNumber: `+1${String(i).padStart(10, '0')}`,
+                    name: `User${i}`,
                 }
             });
             users.push(user);

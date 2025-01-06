@@ -14,9 +14,9 @@ interface ExecutionOutputProps {
 
 export default function ExecutionOutput({ output }: ExecutionOutputProps) {
     return (
-        <Card>
-            <CardContent className="p-0">
-                <ScrollArea className="h-[600px] p-4 font-mono text-sm">
+        <Card className="h-full">
+            <CardContent className="p-0 h-full">
+                <ScrollArea className="h-full p-4 font-mono text-sm">
                     {output.length === 0 ? (
                         <div className="text-muted-foreground">Output will appear here...</div>
                     ) : (

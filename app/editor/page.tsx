@@ -16,6 +16,10 @@ import SaveTemplateModal from '@/app/components/SaveTemplateModal';
 import { DEFAULT_CODE } from '@/lib/defaultCode';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { useTheme } from '@/app/context/ThemeContext';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Link2 } from "lucide-react";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 interface OutputItem {
     type: 'error' | 'stdout' | 'stderr' | 'status';
@@ -84,6 +88,10 @@ export default function EditorPage() {
         canFork: false,
     });
     const [copyFeedback, setCopyFeedback] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [showExitDialog, setShowExitDialog] = useState(false);
+    const [showCopyTooltip, setShowCopyTooltip] = useState(false);
+    const [copyTimeout, setCopyTimeout] = useState<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         if (!isEditingTemplate) {
@@ -128,44 +136,6 @@ export default function EditorPage() {
         fetchTemplate();
     }, [templateId, user]);
 
-    const handleSaveTemplate = async (data: { title: string, description: string, tags: string }) => {
-        if (!user) {
-            alert('You must be logged in to save templates');
-            return;
-        }
-
-        try {
-            const endpoint = isEditingTemplate
-                ? `/api/templates/${templateId}`
-                : '/api/templates';
-
-            const method = isEditingTemplate ? 'PUT' : 'POST';
-
-            const response = await fetch(endpoint, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                },
-                body: JSON.stringify({
-                    ...data,
-                    code,
-                    language,
-                    authorId: user.id,
-                }),
-            });
-
-            if (!response.ok) throw new Error('Failed to save template');
-
-            setShowSaveModal(false);
-            alert(`Template ${isEditingTemplate ? 'updated' : 'saved'} successfully!`);
-            window.location.href = '/templates';
-        } catch (error) {
-            console.error('Error saving template:', error);
-            alert('Failed to save template');
-        }
-    };
-
     const handleExecute = async () => {
         setIsExecuting(true);
         setOutput([]);
@@ -204,7 +174,7 @@ export default function EditorPage() {
     };
 
     const handleDelete = async () => {
-        if (!templateId || !confirm('Are you sure you want to delete this template?')) return;
+        if (!templateId) return;
 
         try {
             const response = await fetch(`/api/templates/${templateId}`, {
@@ -215,12 +185,9 @@ export default function EditorPage() {
             });
 
             if (!response.ok) throw new Error('Failed to delete template');
-
-            alert('Template deleted successfully');
             window.location.href = '/templates';
         } catch (error) {
             console.error('Error deleting template:', error);
-            alert('Failed to delete template');
         }
     };
 
@@ -234,10 +201,6 @@ export default function EditorPage() {
     };
 
     const handleExitTemplateView = () => {
-        if (!confirm('Are you sure you want to exit the template view? Any unsaved changes will be lost.')) {
-            return;
-        }
-
         setIsEditingTemplate(false);
         setTemplateData(null);
         setCode(DEFAULT_CODE[language] || '// Start coding here');
@@ -245,11 +208,32 @@ export default function EditorPage() {
     };
 
     const handleCopyLink = () => {
+        if (copyTimeout) {
+            clearTimeout(copyTimeout);
+        }
+
         const link = `${window.location.origin}/editor?templateId=${templateId}`;
         navigator.clipboard.writeText(link);
         setCopyFeedback(true);
-        setTimeout(() => setCopyFeedback(false), 2000);
+        setShowCopyTooltip(true);
+
+        const timeout = setTimeout(() => {
+            setShowCopyTooltip(false);
+            setTimeout(() => {
+                setCopyFeedback(false);
+            }, 150);
+        }, 1000);
+
+        setCopyTimeout(timeout);
     };
+
+    useEffect(() => {
+        return () => {
+            if (copyTimeout) {
+                clearTimeout(copyTimeout);
+            }
+        };
+    }, [copyTimeout]);
 
     if (isLoadingTemplate) {
         return (
@@ -305,7 +289,7 @@ export default function EditorPage() {
                         {isEditingTemplate && (
                             <Button
                                 variant="outline"
-                                onClick={handleExitTemplateView}
+                                onClick={() => setShowExitDialog(true)}
                                 className="text-foreground"
                             >
                                 Exit Template View
@@ -336,7 +320,7 @@ export default function EditorPage() {
                                         {templateActions.canDelete && (
                                             <Button
                                                 variant="destructive"
-                                                onClick={handleDelete}
+                                                onClick={() => setShowDeleteDialog(true)}
                                             >
                                                 Delete Template
                                             </Button>
@@ -350,13 +334,23 @@ export default function EditorPage() {
                                                 Fork Template
                                             </Button>
                                         )}
-                                        <Button
-                                            variant="outline"
-                                            onClick={handleCopyLink}
-                                            className="text-foreground"
-                                        >
-                                            {copyFeedback ? 'Copied!' : 'Copy Link'}
-                                        </Button>
+                                        <TooltipProvider>
+                                            <Tooltip open={showCopyTooltip}>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        onClick={handleCopyLink}
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-9 w-9 border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+                                                    >
+                                                        <Link2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    {copyFeedback ? 'Copied link to template!' : 'Copy template link'}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     </>
                                 ) : (
                                     <Button
@@ -372,29 +366,44 @@ export default function EditorPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="space-y-4">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg" />
-                            <CodeEditor
-                                value={code}
-                                onChange={setCode}
-                                language={language}
-                                theme={theme}
-                            />
+                <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-lg border">
+                    <ResizablePanel defaultSize={50} minSize={30}>
+                        <ResizablePanelGroup direction="vertical">
+                            <ResizablePanel defaultSize={70} minSize={40}>
+                                <div className="p-4 h-full">
+                                    <div className="relative h-full">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg" />
+                                        <CodeEditor
+                                            value={code}
+                                            onChange={setCode}
+                                            language={language}
+                                            theme={theme}
+                                        />
+                                    </div>
+                                </div>
+                            </ResizablePanel>
+                            <ResizableHandle />
+                            <ResizablePanel defaultSize={30} minSize={15}>
+                                <div className="p-4 h-full">
+                                    <div className="space-y-2 h-full">
+                                        <Textarea
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            placeholder="Enter program input here..."
+                                            className="font-mono bg-background/50 backdrop-blur-sm text-foreground border-border h-full resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            </ResizablePanel>
+                        </ResizablePanelGroup>
+                    </ResizablePanel>
+                    <ResizableHandle />
+                    <ResizablePanel defaultSize={50} minSize={30}>
+                        <div className="p-4 h-full">
+                            <ExecutionOutput output={output} />
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-foreground">Standard Input</Label>
-                            <Textarea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Enter program input here..."
-                                className="font-mono bg-background/50 backdrop-blur-sm text-foreground border-border"
-                            />
-                        </div>
-                    </div>
-                    <ExecutionOutput output={output} />
-                </div>
+                    </ResizablePanel>
+                </ResizablePanelGroup>
             </div>
 
             {showSaveModal && (
@@ -405,8 +414,43 @@ export default function EditorPage() {
                     initialData={templateData}
                     isEditing={isEditingTemplate && templateActions.canEdit}
                     isFork={isEditingTemplate && templateActions.canFork}
+                    onSubmit={() => { }}
                 />
             )}
+
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this template? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Exit Template View</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to exit? Any unsaved changes will be lost.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleExitTemplateView}>
+                            Exit
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </main>
     );
 } 

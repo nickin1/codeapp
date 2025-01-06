@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/layout/Navbar'; 
+import { Providers } from './providers';
+import Navbar from './components/layout/Navbar';
 import './globals.css';
+import { Toaster } from "@/components/ui/toaster";
+import { SearchProvider } from '@/app/context/SearchContext';
 
 export const metadata: Metadata = {
   title: "Scriptorium",
@@ -17,14 +18,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-white dark:bg-gray-900">
-        <AuthProvider>
-          <ThemeProvider>
+        <SearchProvider>
+          <Providers>
             <div className="flex flex-col min-h-screen">
               <Navbar />
               {children}
             </div>
-          </ThemeProvider>
-        </AuthProvider>
+          </Providers>
+        </SearchProvider>
+        <Toaster />
       </body>
     </html>
   );

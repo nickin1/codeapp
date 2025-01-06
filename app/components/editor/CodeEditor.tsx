@@ -114,8 +114,8 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     };
 
     return (
-        <Card className="overflow-hidden">
-            <div ref={editorRef} className="h-[500px]" />
+        <Card className="overflow-hidden h-full">
+            <div ref={editorRef} className="h-full" />
         </Card>
     );
 }

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 
 interface ReportModalProps {
     contentId: string;
@@ -57,9 +58,18 @@ export default function ReportModal({ contentId, contentType, onClose, onSubmit,
 
             if (response.ok) {
                 onSubmit();
-                handleClose();
+                toast({
+                    title: "Report submitted",
+                    description: `The ${contentType === 'blogPost' ? 'post' : 'comment'} has been reported successfully.`,
+                });
+                setTimeout(handleClose, 100);
             }
         } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to submit report.",
+                variant: "destructive",
+            });
             console.error('Error submitting report:', error);
         }
     };

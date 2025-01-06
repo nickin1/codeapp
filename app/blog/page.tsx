@@ -92,7 +92,6 @@ export default function BlogPage() {
     }, [debouncedSearchTerm, currentPage, sortBy]);
 
     const handleVote = async (postId: string, type: number, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent modal from opening
         if (!user) return;
 
         try {
@@ -111,7 +110,7 @@ export default function BlogPage() {
             if (response.ok) {
                 const data = await response.json();
 
-                // Update posts state locally instead of refetching
+                // Update the posts state with the new vote information
                 setPosts(currentPosts =>
                     currentPosts.map(post => {
                         if (post.id === postId) {
@@ -120,12 +119,13 @@ export default function BlogPage() {
                                     ...post,
                                     votes: post.votes.filter(vote => vote.userId !== user.id)
                                 };
+                            } else {
+                                const newVotes = post.votes.filter(vote => vote.userId !== user.id);
+                                return {
+                                    ...post,
+                                    votes: [...newVotes, data]
+                                };
                             }
-                            const newVotes = post.votes.filter(vote => vote.userId !== user.id);
-                            return {
-                                ...post,
-                                votes: [...newVotes, data]
-                            };
                         }
                         return post;
                     })

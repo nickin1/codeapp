@@ -1,42 +1,55 @@
-import { useState, useEffect } from 'react';
+'use client';
+import { useEffect } from 'react';
+import { useSearchContext } from '@/app/context/SearchContext';
 import { useDebounce } from '@/app/hooks/useDebounce';
 
-interface SearchResult {
-    id: string;
-    type: 'template' | 'blog' | 'user';
-    title: string;
-    description?: string;
-    url: string;
-}
-
 export function useSearch() {
-    const [query, setQuery] = useState('');
-    const [results, setResults] = useState<SearchResult[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const debouncedQuery = useDebounce(query, 300);
+    const { state, dispatch } = useSearchContext();
+    const debouncedSearchTerm = useDebounce(state.searchTerm, 300);
 
     useEffect(() => {
-        if (!debouncedQuery) {
-            setResults([]);
-            return;
-        }
-
         const fetchResults = async () => {
-            setIsLoading(true);
+            dispatch({ type: 'SET_LOADING', payload: true });
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
+                const params = new URLSearchParams({
+                    searchTerm: debouncedSearchTerm,
+                    page: state.pagination.currentPage.toString(),
+                    limit: state.pagination.pageSize.toString(),
+                    sortBy: state.filters.sortBy,
+                    ...(state.filters.tags.length > 0 && { tags: state.filters.tags.join(',') })
+                });
+
+                const response = await fetch(`/api/blogs/search?${params}`);
+                if (!response.ok) throw new Error('Failed to fetch results');
+
                 const data = await response.json();
-                setResults(data);
+                dispatch({
+                    type: 'SET_RESULTS',
+                    payload: {
+                        posts: data.posts,
+                        totalPages: data.totalPages
+                    }
+                });
             } catch (error) {
-                console.error('Search error:', error);
-                setResults([]);
+                dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch results' });
             } finally {
-                setIsLoading(false);
+                dispatch({ type: 'SET_LOADING', payload: false });
             }
         };
 
         fetchResults();
-    }, [debouncedQuery]);
+    }, [debouncedSearchTerm, state.pagination.currentPage, state.filters]);
 
-    return { query, setQuery, results, isLoading };
+    return {
+        searchTerm: state.searchTerm,
+        results: state.results,
+        isLoading: state.isLoading,
+        error: state.error,
+        pagination: state.pagination,
+        filters: state.filters,
+        setSearchTerm: (term: string) => dispatch({ type: 'SET_SEARCH_TERM', payload: term }),
+        setFilters: (filters: Partial<typeof state.filters>) =>
+            dispatch({ type: 'SET_FILTERS', payload: filters }),
+        setPage: (page: number) => dispatch({ type: 'SET_PAGE', payload: page })
+    };
 } 

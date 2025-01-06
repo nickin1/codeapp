@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { authorizeRequest } from '../../../lib/authorization';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
@@ -7,7 +8,7 @@ export default async function handler(req, res) {
     console.log('Query parameters:', req.query);
     console.log('ownedOnly value:', req.query.ownedOnly, 'type:', typeof req.query.ownedOnly);
 
-    const { searchTerm, page = 1, limit = 10, ownedOnly, userId } = req.query;
+    const { searchTerm, page = 1, limit = 10, ownedOnly } = req.query;
     let authorizedUserId = null;
 
     const isOwnedOnlyTrue = ownedOnly === 'true';
@@ -15,11 +16,11 @@ export default async function handler(req, res) {
 
     if (isOwnedOnlyTrue) {
         console.log('Entering ownedOnly block');
-        const authResult = await authorizeRequest(req, userId);
-        if (!authResult.authorized) {
-            return res.status(403).json({ error: authResult.error });
+        const session = await getServerSession(req, res, authOptions);
+        if (!session?.user) {
+            return res.status(403).json({ error: "Not authenticated" });
         }
-        authorizedUserId = authResult.userId;
+        authorizedUserId = session.user.id;
         console.log('userId after auth:', authorizedUserId);
     }
 

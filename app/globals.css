@@ -6,6 +6,7 @@
   body {
     @apply text-gray-900 dark:text-gray-100;
   }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -33,6 +34,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -59,6 +61,46 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+
+  from,
+  to {
+    border-color: transparent
+  }
+
+  50% {
+    border-color: white;
+  }
+}
+
+.animate-typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation:
+    typing 1s ease-in-out forwards,
+    blink 0.75s step-end infinite;
+}
+
+.dark .animate-typing {
+  animation:
+    typing 1s ease-in-out forwards,
+    blink 0.75s step-end infinite;
 }
 
 @layer components {
@@ -142,6 +184,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }

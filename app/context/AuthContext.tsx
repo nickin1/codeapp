@@ -1,24 +1,22 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 interface User {
     id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber: string;
-    avatar?: string;
+    email: string | null;
+    name: string | null;
+    image: string | null;
     isAdmin: boolean;
+    isActivated: boolean;
 }
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: () => Promise<void>;
     logout: () => Promise<void>;
-    refreshAuth: () => Promise<void>;
     setUser: (user: User | null) => void;
 }
 
@@ -27,78 +25,44 @@ const AuthContext = createContext<AuthContextType>({
     isLoading: true,
     login: async () => { },
     logout: async () => { },
-    refreshAuth: async () => { },
     setUser: () => { },
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const { data: session, status } = useSession();
     const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const router = useRouter();
 
-    const refreshAuth = async () => {
-        try {
-            const res = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                credentials: 'include',
+    useEffect(() => {
+        if (session?.user) {
+            setUser({
+                id: session.user.id,
+                email: session.user.email ?? null,
+                name: session.user.name ?? null,
+                image: session.user.image ?? null,
+                isAdmin: session.user.isAdmin || false,
+                isActivated: session.user.isActivated || false,
             });
-
-            if (!res.ok) {
-                setUser(null);
-                return;
-            }
-
-            const data = await res.json();
-            setUser(data.user);
-            localStorage.setItem('accessToken', data.accessToken);
-        } catch (error) {
-            console.error('Error refreshing auth:', error);
+        } else if (status === 'unauthenticated') {
             setUser(null);
-        } finally {
-            setIsLoading(false);
         }
-    };
+    }, [session, status]);
 
-    const login = async (email: string, password: string) => {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-            credentials: 'include',
-        });
-
-        if (!res.ok) {
-            const data = await res.json();
-            throw new Error(data.error || 'Failed to login');
-        }
-
-        const data = await res.json();
-        setUser(data.user);
-        localStorage.setItem('accessToken', data.accessToken);
+    const login = async () => {
+        await signIn('github', { callbackUrl: '/' });
     };
 
     const logout = async () => {
-        try {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                credentials: 'include',
-            });
-            localStorage.removeItem('accessToken');
-            setUser(null);
-            setTimeout(() => {
-                router.push('/');
-            }, 0);
-        } catch (error) {
-            console.error('Error logging out:', error);
-        }
+        await signOut({ callbackUrl: '/' });
     };
 
-    useEffect(() => {
-        refreshAuth();
-    }, []);
-
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, logout, refreshAuth, setUser }}>
+        <AuthContext.Provider value={{
+            user,
+            isLoading: status === 'loading',
+            login,
+            logout,
+            setUser
+        }}>
             {children}
         </AuthContext.Provider>
     );

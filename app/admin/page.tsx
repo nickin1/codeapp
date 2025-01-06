@@ -50,7 +50,7 @@ export default function AdminPanel() {
             if (user?.isAdmin) {
                 fetchReportedBlogPosts(currentPage.blogs);
             } else if (!user) {
-                router.push('/login');
+                router.push('/');
             }
         }
     }, [user, authLoading, currentPage.blogs]);
@@ -60,7 +60,7 @@ export default function AdminPanel() {
             if (user?.isAdmin) {
                 fetchReportedComments(currentPage.comments);
             } else if (!user) {
-                router.push('/login');
+                router.push('/');
             }
         }
     }, [user, authLoading, currentPage.comments]);

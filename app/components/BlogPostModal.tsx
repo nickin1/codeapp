@@ -32,6 +32,7 @@ import {
 import { ThumbsUp, ThumbsDown, MessageSquare, Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 interface BlogPostModalProps {
     post: BlogPost;
@@ -41,6 +42,7 @@ interface BlogPostModalProps {
 
 export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: BlogPostModalProps) {
     const { user } = useAuth();
+    const { toast } = useToast();
     const [isOpen, setIsOpen] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [currentPost, setCurrentPost] = useState(initialPost);
@@ -116,6 +118,13 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                 throw new Error('Failed to update content visibility');
             }
 
+            // Update the local state
+            setCurrentPost(prev => ({
+                ...prev,
+                hidden: hide
+            }));
+
+            // Call the parent's update function
             onUpdate();
         } catch (error) {
             console.error('Error updating content visibility:', error);
@@ -131,10 +140,19 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                 },
             });
             if (response.ok) {
+                toast({
+                    title: "Post deleted",
+                    description: "The post has been successfully deleted.",
+                });
                 onClose();
                 onUpdate();
             }
         } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to delete the post.",
+                variant: "destructive",
+            });
             console.error('Error deleting post:', error);
         }
     };
@@ -173,9 +191,24 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                             )}
                         </div>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <div>
-                                Posted by {currentPost.author.firstName} {currentPost.author.lastName} •{' '}
-                                {formatDistance(new Date(currentPost.createdAt), new Date(), { addSuffix: true })}
+                            <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full overflow-hidden">
+                                    {currentPost.author.image ? (
+                                        <img
+                                            src={currentPost.author.image}
+                                            alt={currentPost.author.name || ''}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full bg-primary/10 flex items-center justify-center text-xs font-medium uppercase">
+                                            {currentPost.author.name?.[0]}
+                                        </div>
+                                    )}
+                                </div>
+                                <span>
+                                    Posted by {currentPost.author.name} •{' '}
+                                    {formatDistance(new Date(currentPost.createdAt), new Date(), { addSuffix: true })}
+                                </span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 {user?.id === currentPost.authorId && (
@@ -235,7 +268,7 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                                 size="sm"
                                 className={cn(
                                     "h-7 w-7 p-0",
-                                    userVote === 1 && "text-primary"
+                                    userVote === 1 && "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:text-blue-500"
                                 )}
                                 disabled={!user}
                             >
@@ -248,7 +281,7 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                                 size="sm"
                                 className={cn(
                                     "h-7 w-7 p-0",
-                                    userVote === -1 && "text-destructive"
+                                    userVote === -1 && "bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                                 )}
                                 disabled={!user}
                             >

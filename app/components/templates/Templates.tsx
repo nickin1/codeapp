@@ -28,9 +28,9 @@ interface Template {
   tags: string;
   authorId: string;
   author?: {
-    firstName: string;
-    lastName: string;
+    name: string;
   };
+
   forked: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -62,13 +62,7 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
       const endpoint = `/api/templates/search?searchTerm=${encodeURIComponent(debouncedSearchTerm)}&page=${currentPage}&limit=10${userIdParam}${showOwnedOnly ? '&ownedOnly=true' : ''}`;
       console.log('Fetching templates with endpoint:', endpoint);
 
-      const response = await fetch(endpoint, {
-        headers: {
-          ...(showOwnedOnly && user && {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-          })
-        }
-      });
+      const response = await fetch(endpoint);
 
       if (!response.ok) {
         throw new Error('Failed to fetch templates');
@@ -100,9 +94,6 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
     try {
       const response = await fetch(`/api/templates/${templateToDelete}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
       });
 
       if (!response.ok) {
@@ -187,7 +178,7 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-[300px] rounded-lg" />
+            <Skeleton key={i} className="h-[240px] rounded-lg" />
           ))}
         </div>
       ) : (

@@ -1,40 +1,45 @@
 import { PrismaClient } from '@prisma/client';
 import { off } from 'process';
-import { authorizeRequest, authorizeRequestNoUserID } from '../../../lib/authorization';
+import { authorizeRequest } from '../../../lib/authorization';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
-    const { searchTerm, page = 1, limit = 10, sortBy = 'dateDesc' } = req.query;
+    const { searchTerm, page = 1, limit = 10, sortBy = 'dateDesc', tags = '' } = req.query;
 
     if (req.method === 'GET') {
         try {
-            const authResult = await authorizeRequestNoUserID(req);
-            const userId = authResult.userId;
+            const session = await getServerSession(req, res, authOptions);
+            const userId = session?.user?.id;
+            const isAdmin = session?.user?.isAdmin;
 
-            console.log("isAdmin:", authResult.isAdmin);
+            const tagArray = tags ? tags.split(',') : [];
 
-            let whereClause = {
-                OR: [
-                    { title: { contains: searchTerm || '' } },
-                    { content: { contains: searchTerm || '' } },
-                    { tags: { contains: searchTerm || '' } },
+            const whereClause = {
+                AND: [
+                    {
+                        OR: [
+                            { title: { contains: searchTerm || '' } },
+                            { content: { contains: searchTerm || '' } },
+                            { tags: { contains: searchTerm || '' } },
+                        ]
+                    },
+                    // Only apply hidden filter for non-admins
+                    ...(!isAdmin ? [{
+                        OR: [
+                            { hidden: false },
+                            { authorId: userId }
+                        ]
+                    }] : []),
+                    ...(tagArray.length > 0 ? [{
+                        tags: {
+                            hasSome: tagArray
+                        }
+                    }] : [])
                 ]
             };
-
-            if (!authResult.isAdmin) {
-                whereClause = {
-                    AND: [
-                        whereClause,
-                        {
-                            OR: [
-                                { hidden: false },
-                                { authorId: userId }
-                            ]
-                        }
-                    ]
-                };
-            }
 
             let blogPosts = await prisma.blogPost.findMany({
                 where: whereClause,
@@ -49,6 +54,7 @@ export default async function handler(req, res) {
                 score: post.votes.reduce((acc, vote) => acc + vote.type, 0)
             }));
 
+            // Apply sorting
             switch (sortBy) {
                 case 'dateDesc':
                     blogPosts.sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf());
@@ -62,25 +68,22 @@ export default async function handler(req, res) {
                 case 'scoreAsc':
                     blogPosts.sort((a, b) => a.score - b.score);
                     break;
-                default:
-                    blogPosts.sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf());
             }
 
-            const paginatedResults = blogPosts.slice((page - 1) * limit, page * limit);
+            const startIndex = (Number(page) - 1) * Number(limit);
+            const endIndex = startIndex + Number(limit);
+            const paginatedPosts = blogPosts.slice(startIndex, endIndex);
 
-            console.log(paginatedResults);
             return res.status(200).json({
-                totalPosts: blogPosts.length,
+                posts: paginatedPosts,
                 currentPage: Number(page),
-                totalPages: Math.ceil(blogPosts.length / limit),
-                posts: paginatedResults,
+                totalPages: Math.ceil(blogPosts.length / Number(limit)),
+                totalPosts: blogPosts.length
             });
         } catch (error) {
             console.error("Error occurred during search:", error);
             return res.status(500).json({ message: 'Error retrieving blog posts', error });
         }
-    } else {
-        res.status(405).end(`Method not Allowed`);
     }
 }
 

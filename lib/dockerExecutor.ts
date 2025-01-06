@@ -38,7 +38,7 @@ export class DockerExecutor {
                 console.log('Docker image found');
             } catch (error) {
                 console.error('Docker image not found:', error);
-                throw new Error(`Docker image ${imageName} not found. Please run the build-images.sh script first.`);
+                throw new Error(`Server error, please try again later.`);
             }
 
             // Create temp directory for this execution

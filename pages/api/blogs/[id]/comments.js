@@ -8,7 +8,7 @@ export default async function handler(req, res) {
         const { content, authorId, blogPostId, parentId } = req.body;
 
         // Authorization check
-        const authResult = await authorizeRequest(req, authorId);
+        const authResult = await authorizeRequest(req, authorId, res);
         if (!authResult.authorized) {
             return res.status(403).json({ error: authResult.error });
         }

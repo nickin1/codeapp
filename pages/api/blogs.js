@@ -12,7 +12,7 @@ export default async function handler(req, res) {
         const { title, content, authorId, templateIds, tags } = req.body;
 
         // Authorization check
-        const authResult = await authorizeRequest(req, authorId);
+        const authResult = await authorizeRequest(req, authorId, res);
         console.log("Authorization result:", authResult);
         if (!authResult.authorized) {
             console.log("Authorization failed:", authResult.error);

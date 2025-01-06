@@ -9,8 +9,7 @@ export interface Comment {
     author: {
         name: string;
         email: string;
-        firstName: string;
-        lastName: string;
+        image?: string;
     };
     votes: Vote[];
     children?: Comment[];
@@ -27,8 +26,7 @@ export interface BlogPost {
     author: {
         name: string;
         email: string;
-        firstName: string;
-        lastName: string;
+        image?: string;
     };
     comments: Comment[];
     tags: string;

@@ -11,6 +11,7 @@ import {
     Popover,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface TemplateCardProps {
     template: {
@@ -22,8 +23,8 @@ interface TemplateCardProps {
         tags: string;
         authorId: string;
         author?: {
-            firstName: string;
-            lastName: string;
+            name: string;
+            image?: string;
         };
         forked: boolean;
         createdAt: Date;
@@ -40,6 +41,7 @@ interface TemplateCardProps {
 export default function TemplateCard({ template, onDelete, onUpdate }: TemplateCardProps) {
     const { user } = useAuth();
     const router = useRouter();
+    console.log('Forked status:', template.forked);
     const [showBlogPosts, setShowBlogPosts] = useState(false);
     const [showCopyTooltip, setShowCopyTooltip] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState(false);
@@ -73,31 +75,42 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
     };
 
     return (
-        <Card className="h-full flex flex-col">
-            <CardContent className="pt-6 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold">
-                        {template.title}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                        {template.forked && (
-                            <Badge variant="secondary">
-                                Forked
+        <Card className="h-[240px] flex flex-col">
+            <CardContent className="pt-4 flex-1 flex flex-col">
+                <div className="flex justify-between items-start mb-1">
+                    <div className="space-y-1.5 min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                            <h3 className="text-lg font-semibold truncate">
+                                {template.title}
+                            </h3>
+                            {template.forked === true && (
+                                <Badge
+                                    variant="outline"
+                                    className="flex-shrink-0 bg-orange-50 dark:bg-orange-900/50 text-orange-600 dark:text-orange-200 border-orange-200 dark:border-orange-800 font-medium"
+                                >
+                                    Forked
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Badge
+                                variant="outline"
+                                className="bg-purple-50 dark:bg-purple-900/50 text-purple-600 dark:text-purple-200 border-purple-200 dark:border-purple-800 font-medium"
+                            >
+                                {template.language}
                             </Badge>
-                        )}
+                        </div>
                     </div>
                 </div>
+
                 {template.description && (
-                    <p className="text-sm text-muted-foreground mt-3 line-clamp-3">
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                         {template.description}
                     </p>
                 )}
 
-                <div className="flex flex-wrap gap-2 mt-auto pt-3">
-                    <Badge variant="default" className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-200">
-                        {template.language}
-                    </Badge>
-                    {template.tags.split(',').map((tag: string, index: number) => (
+                <div className="flex gap-2 mt-auto pt-2 overflow-hidden whitespace-nowrap">
+                    {template.tags.split(',').slice(0, 3).map((tag: string, index: number) => (
                         <Badge
                             key={index}
                             variant="secondary"
@@ -106,19 +119,60 @@ export default function TemplateCard({ template, onDelete, onUpdate }: TemplateC
                             {tag.trim()}
                         </Badge>
                     ))}
+                    {template.tags.split(',').length > 3 && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge
+                                        variant="secondary"
+                                        className="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-200 cursor-default"
+                                    >
+                                        +{template.tags.split(',').length - 3}
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                    className="max-w-[300px] bg-background border"
+                                    side="top"
+                                >
+                                    <div className="flex flex-wrap gap-1">
+                                        {template.tags.split(',')
+                                            .slice(3)
+                                            .map((tag: string, index: number) => (
+                                                <Badge
+                                                    key={index}
+                                                    variant="secondary"
+                                                    className="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-200"
+                                                >
+                                                    {tag.trim()}
+                                                </Badge>
+                                            ))}
+                                    </div>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                 </div>
             </CardContent>
 
             <CardFooter className="border-t py-2 flex justify-between items-center">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                    <Avatar className="h-6 w-6">
+                        <AvatarImage src={template.author?.image} alt={template.author?.name || 'Unknown'} />
+                        <AvatarFallback>
+                            {template.author?.name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                    </Avatar>
                     <span className="truncate">
-                        by {template.author
-                            ? `${template.author.firstName} ${template.author.lastName}`
+                        {template.author
+                            ? template.author.name
                             : 'Unknown Author'
                         }
                     </span>
                     {isOwner && (
-                        <Badge variant="secondary" className="flex-shrink-0 bg-green-500">
+                        <Badge
+                            variant="outline"
+                            className="bg-green-50 dark:bg-green-900/50 text-green-600 dark:text-green-200 border-green-200 dark:border-green-800 font-medium"
+                        >
                             You
                         </Badge>
                     )}

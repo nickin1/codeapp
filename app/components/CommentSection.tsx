@@ -17,6 +17,7 @@ import {
     CollapsibleContent,
 } from "@/components/ui/collapsible"
 import { motion, AnimatePresence } from 'framer-motion';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface CommentSectionProps {
     postId: string;
@@ -221,8 +222,12 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                 "border-l-muted"
             )}>
                 <div className="flex items-center gap-2 text-sm">
+                    <Avatar className="h-6 w-6">
+                        <AvatarImage src={comment.author.image || undefined} />
+                        <AvatarFallback>{comment.author.name?.[0]}</AvatarFallback>
+                    </Avatar>
                     <span className="font-medium">
-                        {comment.author.firstName} {comment.author.lastName}
+                        {comment.author.name}
                     </span>
                     <span className="text-muted-foreground">•</span>
                     <span className="text-muted-foreground">
@@ -243,7 +248,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                             size="sm"
                             className={cn(
                                 "h-6 w-6 p-0",
-                                userVote === 1 && "text-primary"
+                                userVote === 1 && "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:text-blue-500"
                             )}
                             disabled={!user}
                         >
@@ -256,7 +261,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                             size="sm"
                             className={cn(
                                 "h-6 w-6 p-0",
-                                userVote === -1 && "text-destructive"
+                                userVote === -1 && "bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                             )}
                             disabled={!user}
                         >

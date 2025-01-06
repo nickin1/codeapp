@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import TagInput from '@/app/components/TagInput';
+import { useToast } from "@/hooks/use-toast";
 
 interface SaveTemplateModalProps {
     code: string;
@@ -28,6 +29,7 @@ interface SaveTemplateModalProps {
     } | null;
     isEditing?: boolean;
     isFork?: boolean;
+    onSubmit: (data: any) => void;
 }
 
 export default function SaveTemplateModal({
@@ -37,8 +39,10 @@ export default function SaveTemplateModal({
     initialData,
     isEditing,
     isFork,
+    onSubmit,
 }: SaveTemplateModalProps) {
     const { user } = useAuth();
+    const { toast } = useToast();
     const [title, setTitle] = useState(initialData?.title || '');
     const [description, setDescription] = useState(initialData?.description || '');
     const [tags, setTags] = useState<string[]>(
@@ -57,20 +61,26 @@ export default function SaveTemplateModal({
         e.preventDefault();
         if (!user) return;
 
-        setIsSaving(true);
-        setError('');
-
         try {
-            let endpoint = '/api/templates';
-            let method = 'POST';
+            setIsSaving(true);
+            setError('');
 
-            if (isEditing && initialData) {
-                endpoint = `/api/templates/${initialData.id}`;
-                method = 'PUT';
-            } else if (isFork && initialData) {
-                endpoint = `/api/templates/${initialData.id}/fork`;
-                method = 'POST';
-            }
+            const templateData = {
+                title,
+                description,
+                code,
+                language,
+                tags: tags.filter(tag => tag.trim()),
+                userId: user.id
+            };
+
+            const endpoint = isFork
+                ? `/api/templates/${initialData?.id}/fork`
+                : isEditing
+                    ? `/api/templates/${initialData?.id}`
+                    : '/api/templates';
+
+            const method = isEditing ? 'PUT' : 'POST';
 
             const response = await fetch(endpoint, {
                 method,
@@ -78,39 +88,41 @@ export default function SaveTemplateModal({
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 },
-                body: JSON.stringify({
-                    title,
-                    description,
-                    code,
-                    language,
-                    tags: tags.join(','),
-                    authorId: user.id,
-                    ...(isFork && {
-                        userId: user.id,
-                        newTitle: title,
-                        newDescription: description,
-                        newCode: code,
-                        newLanguage: language,
-                        newTags: tags.join(','),
-                    })
-                }),
+                body: JSON.stringify(templateData)
             });
 
             if (!response.ok) {
                 throw new Error('Failed to save template');
             }
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (isFork) {
-                window.location.href = `/editor/?templateId=${data.newTemplateId}`;
-            } else if (isEditing) {
-                window.location.reload();
-            } else {
-                window.location.href = '/templates';
+            toast({
+                title: isEditing ? "Template Updated" : isFork ? "Template Forked" : "Template Saved",
+                description: isEditing
+                    ? "Your template has been updated successfully."
+                    : isFork
+                        ? "Template has been forked successfully."
+                        : "Your template has been saved successfully.",
+                duration: 3000,
+            });
+
+            onClose();
+            onSubmit(result);
+
+            if (isEditing) {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             }
-        } catch (error) {
-            setError('Failed to save template. Please try again.');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
+            toast({
+                title: "Error",
+                description: "Failed to save template. Please try again.",
+                variant: "destructive",
+                duration: 3000,
+            });
         } finally {
             setIsSaving(false);
         }

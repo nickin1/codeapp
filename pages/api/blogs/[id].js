@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { authorizeRequestNoUserID, authorizeRequest } from '../../../lib/authorization';
+import { authorizeRequest } from '@/lib/authorization';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
@@ -8,8 +10,8 @@ export default async function handler(req, res) {
 
     if (req.method === "GET") {
         try {
-            const authResult = await authorizeRequestNoUserID(req);
-            const userId = authResult.userId;
+            const session = await getServerSession(req, res, authOptions);
+            const userId = session?.user?.id;
 
             console.log("DEBUG: User ID:", userId);
 
@@ -33,7 +35,7 @@ export default async function handler(req, res) {
             }
 
             // Authorization check for hidden posts
-            if (blogPost.hidden && !authResult.isAdmin && blogPost.authorId !== userId) {
+            if (blogPost.hidden && !session?.user?.isAdmin && blogPost.authorId !== userId) {
                 return res.status(404).json({ error: "Blog post unavailable" });
             }
 
@@ -74,7 +76,7 @@ export default async function handler(req, res) {
                     }
 
                     // For non-admins and non-authors, remove hidden comments
-                    if (!authResult.isAdmin && comment.authorId !== authResult.userId && comment.hidden) {
+                    if (!session?.user?.isAdmin && comment.authorId !== userId && comment.hidden) {
                         return null;
                     }
 
@@ -114,7 +116,7 @@ export default async function handler(req, res) {
             }
 
             // Authorization check
-            const authResult = await authorizeRequest(req, blogPost.authorId);
+            const authResult = await authorizeRequest(req, blogPost.authorId, res);
             if (!authResult.authorized) {
                 return res.status(403).json({ error: authResult.error });
             }
@@ -179,7 +181,7 @@ export default async function handler(req, res) {
                 blogPost.templates.map(t => t.id));
 
             // Authorization check
-            const authResult = await authorizeRequest(req, blogPost.authorId);
+            const authResult = await authorizeRequest(req, blogPost.authorId, res);
             if (!authResult.authorized) {
                 return res.status(403).json({ error: authResult.error });
             }

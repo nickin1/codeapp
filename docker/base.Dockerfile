@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:bookworm-slim
 
 # Install basic utilities
 RUN apt-get update && apt-get install -y \

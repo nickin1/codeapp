@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         }
 
         // Authorization check
-        const authResult = await authorizeRequest(req, userId);
+        const authResult = await authorizeRequest(req, userId, res);
         if (!authResult.authorized) {
             return res.status(403).json({ error: authResult.error });
         }
