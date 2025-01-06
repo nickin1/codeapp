@@ -7,7 +7,12 @@ import { SearchProvider } from '@/app/context/SearchContext';
 
 export const metadata: Metadata = {
   title: "Scriptorium",
-  description: "Write, execute, and share code in multiple programming languages",
+  description: "Write, execute, and share code templates",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ]
+  }
 };
 
 export default function RootLayout({

@@ -21,13 +21,13 @@ import {
 
 export default function Home() {
   return (
-    <main className="flex-1">
+    <main className="flex-1 bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-10">
           {/* Header */}
           <div className="text-center space-y-4">
             <h1 className="text-5xl font-bold tracking-tight">
-              <span className="inline-block animate-typing border-r-4 border-r-white pr-5">
+              <span className="inline-block w-[105px] overflow-hidden whitespace-nowrap animate-typing">
                 Hi 👋
               </span>
             </h1>
