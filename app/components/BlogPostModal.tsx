@@ -178,15 +178,15 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
     return (
         <>
             <Dialog open={isOpen} onOpenChange={handleClose}>
-                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader className="space-y-1.5">
+                <DialogContent className="max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6">
+                    <DialogHeader className="space-y-1.5 sm:space-y-2">
                         <div className="flex items-center gap-2">
-                            <DialogTitle className="text-xl">{currentPost.title}</DialogTitle>
+                            <DialogTitle className="text-lg sm:text-xl line-clamp-2">{currentPost.title}</DialogTitle>
                             {currentPost.hidden && (
                                 <Badge variant="destructive" className="text-xs">Hidden</Badge>
                             )}
                         </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 text-sm text-muted-foreground">
                             <div className="flex items-center gap-2">
                                 <div className="h-6 w-6 rounded-full overflow-hidden">
                                     {currentPost.author.image ? (
@@ -206,7 +206,7 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                                     {formatDistance(new Date(currentPost.createdAt), new Date(), { addSuffix: true })}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex flex-wrap items-center gap-1.5">
                                 {user?.id === currentPost.authorId && (
                                     <>
                                         <Button

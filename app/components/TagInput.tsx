@@ -3,17 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from "@/lib/utils";
 
 interface TagInputProps {
     value: string[];
-    onChange: (tags: string[]) => void;
+    onChange: (value: string[]) => void;
     placeholder?: string;
+    className?: string;
 }
 
 export default function TagInput({
     value,
     onChange,
-    placeholder = "Add tags..."
+    placeholder = "Add tags...",
+    className
 }: TagInputProps) {
     const [inputValue, setInputValue] = useState('');
     const [localTags, setLocalTags] = useState<string[]>(value);
@@ -46,7 +49,7 @@ export default function TagInput({
     };
 
     return (
-        <div className="min-h-[42px] flex flex-wrap items-start gap-2 p-2 border rounded-md bg-background">
+        <div className={cn("flex flex-wrap gap-2 p-2 border rounded-md", className)}>
             <div className="flex flex-wrap items-center gap-1.5 w-full">
                 {localTags.length > 0 && localTags.map((tag) => (
                     <Badge

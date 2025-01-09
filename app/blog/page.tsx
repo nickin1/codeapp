@@ -204,10 +204,10 @@ export default function BlogPage() {
 
     return (
         <div className="min-h-screen w-full bg-background">
-            <div className="container mx-auto py-8 max-w-6xl">
-                <div className="flex flex-col gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="container mx-auto py-4 sm:py-8 max-w-6xl px-4">
+                <div className="flex flex-col gap-4 sm:gap-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
                             <div className="sm:col-span-3">
                                 <SearchBar
                                     value={searchTerm}
@@ -219,7 +219,7 @@ export default function BlogPage() {
                                 value={sortBy}
                                 onValueChange={setSortBy}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="h-10 sm:h-9">
                                     <SelectValue placeholder="Sort by" />
                                 </SelectTrigger>
                                 <SelectContent>

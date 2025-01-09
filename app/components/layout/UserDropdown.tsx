@@ -34,11 +34,6 @@ export default function UserDropdown() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-                {user.isAdmin && (
-                    <DropdownMenuItem asChild>
-                        <Link href="/admin">Admin</Link>
-                    </DropdownMenuItem>
-                )}
                 <DropdownMenuItem
                     className="text-red-600 dark:text-red-400"
                     onClick={logout}

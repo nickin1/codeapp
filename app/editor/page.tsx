@@ -92,6 +92,18 @@ export default function EditorPage() {
     const [showExitDialog, setShowExitDialog] = useState(false);
     const [showCopyTooltip, setShowCopyTooltip] = useState(false);
     const [copyTimeout, setCopyTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768); // 768px is the standard md breakpoint
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         if (!isEditingTemplate) {
@@ -367,7 +379,7 @@ export default function EditorPage() {
                 </div>
 
                 <ResizablePanelGroup
-                    direction="horizontal"
+                    direction={isMobile ? "vertical" : "horizontal"}
                     className="min-h-[600px] rounded-xl border"
                 >
                     <ResizablePanel defaultSize={50} minSize={30}>

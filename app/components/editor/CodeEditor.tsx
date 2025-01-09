@@ -61,6 +61,14 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
                 fontSize: 14,
                 lineNumbers: 'on',
                 renderLineHighlight: 'none',
+                wordWrap: 'on',
+                scrollbar: {
+                    vertical: 'visible',
+                    horizontal: 'visible',
+                    verticalScrollbarSize: 10,
+                    horizontalScrollbarSize: 10,
+                },
+                padding: { top: 8, bottom: 8 },
             });
 
             monacoEditorRef.current.onDidChangeModelContent(() => {
@@ -113,7 +121,7 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     };
 
     return (
-        <Card className="overflow-hidden h-full rounded-sm">
+        <Card className="overflow-hidden h-[300px] sm:h-full rounded-sm">
             <div ref={editorRef} className="h-full rounded-sm" />
         </Card>
     );

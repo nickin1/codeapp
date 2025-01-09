@@ -130,9 +130,9 @@ export default function SaveTemplateModal({
 
     return (
         <Dialog open={true} onOpenChange={() => onClose()}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{getModalTitle()}</DialogTitle>
+            <DialogContent className="sm:max-w-[425px] max-h-[85vh] h-[85vh] sm:h-auto overflow-y-auto p-4 sm:p-6">
+                <DialogHeader className="mb-4">
+                    <DialogTitle className="text-xl">{getModalTitle()}</DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,6 +149,7 @@ export default function SaveTemplateModal({
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
+                            className="h-11 sm:h-9"
                         />
                     </div>
 
@@ -159,7 +160,7 @@ export default function SaveTemplateModal({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             required
-                            className="h-32"
+                            className="min-h-[120px] h-32 sm:h-32"
                         />
                     </div>
 
@@ -169,14 +170,24 @@ export default function SaveTemplateModal({
                             value={tags}
                             onChange={setTags}
                             placeholder="Press space or enter to add tags"
+                            className="min-h-[48px] sm:min-h-[38px]"
                         />
                     </div>
 
-                    <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="outline" onClick={onClose}>
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-3 pt-4 sm:pt-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            className="h-11 sm:h-9 w-full sm:w-auto"
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSaving}>
+                        <Button
+                            type="submit"
+                            disabled={isSaving}
+                            className="h-11 sm:h-9 w-full sm:w-auto"
+                        >
                             {isSaving && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
                             {isEditing ? 'Update' : isFork ? 'Fork' : 'Save'} Template
                         </Button>

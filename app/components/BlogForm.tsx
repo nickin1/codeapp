@@ -36,6 +36,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TagInput from '@/app/components/TagInput';
+import { toast } from "@/hooks/use-toast";
 
 interface BlogFormProps {
     post?: Partial<BlogPost>;
@@ -53,6 +54,7 @@ export default function BlogForm({ post, open, onClose, onSubmit }: BlogFormProp
     const [activeTab, setActiveTab] = React.useState('write');
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = React.useState(false);
     const [isClosing, setIsClosing] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const { user } = useAuth();
 
     const initialValues = React.useRef({
@@ -125,12 +127,13 @@ export default function BlogForm({ post, open, onClose, onSubmit }: BlogFormProp
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) return;
-
-        const processedContent = processMarkdown(content);
-        const templateIds = extractTemplateIds(processedContent);
+        if (!user || isSubmitting) return;
 
         try {
+            setIsSubmitting(true);
+            const processedContent = processMarkdown(content);
+            const templateIds = extractTemplateIds(processedContent);
+
             const endpoint = post?.id ? `/api/blogs/${post.id}` : '/api/blogs';
             const method = post?.id ? 'PUT' : 'POST';
 
@@ -155,20 +158,26 @@ export default function BlogForm({ post, open, onClose, onSubmit }: BlogFormProp
             onSubmit(updatedPost);
         } catch (error) {
             console.error('Error saving post:', error);
-            alert('Failed to save post. Please try again.');
+            toast({
+                title: "Error",
+                description: "Failed to save post. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
         <>
             <Dialog open={open && !isClosing} onOpenChange={handleClose}>
-                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6">
                     <DialogHeader>
-                        <DialogTitle>{post?.id ? 'Edit Post' : 'Create New Post'}</DialogTitle>
+                        <DialogTitle className="text-lg sm:text-xl">{post?.id ? 'Edit Post' : 'Create New Post'}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <div className="flex items-center gap-4">
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                                 <TabsList className="h-8">
                                     <TabsTrigger value="write" className="text-xs">Write</TabsTrigger>
                                     <TabsTrigger value="preview" className="text-xs">Preview</TabsTrigger>
@@ -179,7 +188,7 @@ export default function BlogForm({ post, open, onClose, onSubmit }: BlogFormProp
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="Post title"
                                     required
-                                    className="text-lg flex-1"
+                                    className="text-base sm:text-lg flex-1 h-10 sm:h-9"
                                 />
                             </div>
 
@@ -226,8 +235,8 @@ export default function BlogForm({ post, open, onClose, onSubmit }: BlogFormProp
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit">
-                                    {post?.id ? 'Update' : 'Create'} Post
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? 'Saving...' : post?.id ? 'Update' : 'Create'} Post
                                 </Button>
                             </div>
                         </div>

@@ -26,18 +26,25 @@ export default function ReportModal({ contentId, contentType, onClose, onSubmit,
     const [reason, setReason] = useState('');
     const [additionalExplanation, setAdditionalExplanation] = useState('');
     const [isOpen, setIsOpen] = useState(open);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
 
     const handleClose = () => {
         setIsOpen(false);
-        setTimeout(onClose, 300);
+        setTimeout(() => {
+            onClose();
+            setIsSubmitting(false);
+            setReason('');
+            setAdditionalExplanation('');
+        }, 300);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) return;
+        if (!user || isSubmitting) return;
 
         try {
+            setIsSubmitting(true);
             const endpoint = contentType === 'blogPost'
                 ? `/api/blogs/${contentId}/report`
                 : `/api/blogs/${contentId.split('-')[0]}/comments/${contentId.split('-')[1]}/report`;
@@ -61,7 +68,7 @@ export default function ReportModal({ contentId, contentType, onClose, onSubmit,
                     title: "Report submitted",
                     description: `The ${contentType === 'blogPost' ? 'post' : 'comment'} has been reported successfully.`,
                 });
-                setTimeout(handleClose, 100);
+                handleClose();
             }
         } catch (error) {
             toast({
@@ -70,6 +77,7 @@ export default function ReportModal({ contentId, contentType, onClose, onSubmit,
                 variant: "destructive",
             });
             console.error('Error submitting report:', error);
+            setIsSubmitting(false);
         }
     };
 
@@ -118,8 +126,9 @@ export default function ReportModal({ contentId, contentType, onClose, onSubmit,
                         <Button
                             type="submit"
                             variant="destructive"
+                            disabled={isSubmitting}
                         >
-                            Submit Report
+                            {isSubmitting ? 'Submitting...' : 'Submit Report'}
                         </Button>
                     </div>
                 </form>

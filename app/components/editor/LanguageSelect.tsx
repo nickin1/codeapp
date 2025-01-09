@@ -22,10 +22,10 @@ export default function LanguageSelect({ value, onChange, disabled }: LanguageSe
             onValueChange={onChange}
             disabled={disabled}
         >
-            <SelectTrigger className="w-[180px] cursor-pointer">
+            <SelectTrigger className="w-full sm:w-[180px] cursor-pointer">
                 <SelectValue placeholder="Select language" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[50vh]">
                 {SUPPORTED_LANGUAGES.map((lang) => (
                     <SelectItem
                         key={lang.id}

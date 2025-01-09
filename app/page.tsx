@@ -51,21 +51,21 @@ const TechBadge = ({ href, children }: { href: string; children: React.ReactNode
 export default function Home() {
   return (
     <main className="flex-1">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Hero Section with Personal Info */}
-        <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-6 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-6 pb-6 sm:pb-10">
           {/* Left side: Title and buttons */}
-          <div className="flex flex-col justify-between h-[200px]">
+          <div className="flex flex-col justify-between min-h-[200px] gap-4 sm:gap-0">
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight sm:text-5xl">
                 Hi 👋
               </h1>
-              <p className="text-xl text-muted-foreground">
+              <p className="text-lg sm:text-xl text-muted-foreground">
                 This is a platform for running code, saving and sharing templates, and having forum-like discussions.
                 I built it to learn and explore the process of creating a real-world app from the ground up, in terms of both software and hardware.
               </p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button asChild>
                 <Link href="/editor" className="gap-2">
                   <Terminal className="h-4 w-4" />
@@ -82,7 +82,7 @@ export default function Home() {
           </div>
 
           {/* Right side: Personal Info Card */}
-          <Card className="p-6 border-0 shadow-none h-[200px] flex flex-col justify-center bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5">
+          <Card className="p-4 sm:p-6 border-0 shadow-none min-h-[200px] flex flex-col justify-center bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
@@ -99,7 +99,7 @@ export default function Home() {
                   ...
                 </p>
               </div>
-              <div className="flex flex-wrap justify-between gap-2">
+              <div className="flex flex-wrap justify-between gap-3 sm:gap-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -139,9 +139,9 @@ export default function Home() {
 
         {/* Tech Stack Overview */}
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-x-6">
             {/* Code Execution Card */}
-            <Card className="p-6 pb-3 border-0 shadow-none">
+            <Card className="p-4 sm:p-6 pb-3 border-0 shadow-none">
               <div className="flex items-center gap-2 mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Terminal className="h-6 w-6 text-primary" />
@@ -170,7 +170,7 @@ export default function Home() {
             </Card>
 
             {/* Community Features Card */}
-            <Card className="p-6 pb-3 border-0 shadow-none">
+            <Card className="p-4 sm:p-6 pb-3 border-0 shadow-none">
               <div className="flex items-center gap-2 mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Users className="h-6 w-6 text-primary" />
@@ -197,7 +197,7 @@ export default function Home() {
             </Card>
 
             {/* Infrastructure Card */}
-            <Card className="p-6 pt-3 border-0 shadow-none">
+            <Card className="p-4 sm:p-6 pt-3 border-0 shadow-none">
               <div className="flex items-center gap-2 mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Server className="h-6 w-6 text-primary" />
@@ -226,7 +226,7 @@ export default function Home() {
             </Card>
 
             {/* Security & Auth Card */}
-            <Card className="p-6 pt-3 border-0 shadow-none">
+            <Card className="p-4 sm:p-6 pt-3 border-0 shadow-none">
               <div className="flex items-center gap-2 mb-4">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Lock className="h-6 w-6 text-primary" />
