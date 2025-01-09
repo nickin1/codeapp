@@ -382,7 +382,7 @@ export default function EditorPage() {
                     direction={isMobile ? "vertical" : "horizontal"}
                     className="min-h-[600px] rounded-xl border"
                 >
-                    <ResizablePanel defaultSize={50} minSize={30}>
+                    <ResizablePanel defaultSize={70} minSize={30}>
                         <ResizablePanelGroup direction="vertical">
                             <ResizablePanel defaultSize={70} minSize={40}>
                                 <div className="p-2 h-full">
@@ -412,7 +412,7 @@ export default function EditorPage() {
                         </ResizablePanelGroup>
                     </ResizablePanel>
                     <ResizableHandle />
-                    <ResizablePanel defaultSize={50} minSize={30}>
+                    <ResizablePanel defaultSize={30} minSize={30}>
                         <div className="p-2 h-full">
                             <div className="h-full">
                                 <ExecutionOutput output={output} className="rounded-sm" />
