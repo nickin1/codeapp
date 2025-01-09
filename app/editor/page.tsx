@@ -237,7 +237,7 @@ export default function EditorPage() {
 
     if (isLoadingTemplate) {
         return (
-            <main className="flex-1 p-4 bg-background">
+            <div className="container mx-auto p-4">
                 <div className="max-w-7xl mx-auto space-y-4">
                     <Card className="bg-muted">
                         <CardContent className="p-4 space-y-4">
@@ -253,12 +253,12 @@ export default function EditorPage() {
                         </CardContent>
                     </Card>
                 </div>
-            </main>
+            </div>
         );
     }
 
     return (
-        <main className="flex-1 p-4 bg-background">
+        <div className="container mx-auto p-4">
             <div className="max-w-7xl mx-auto space-y-4">
                 {isEditingTemplate && templateData && (
                     <Card className="bg-muted">
@@ -366,13 +366,15 @@ export default function EditorPage() {
                     </div>
                 </div>
 
-                <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-lg border">
+                <ResizablePanelGroup
+                    direction="horizontal"
+                    className="min-h-[600px] rounded-xl border"
+                >
                     <ResizablePanel defaultSize={50} minSize={30}>
                         <ResizablePanelGroup direction="vertical">
                             <ResizablePanel defaultSize={70} minSize={40}>
-                                <div className="p-4 h-full">
-                                    <div className="relative h-full">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg" />
+                                <div className="p-2 h-full">
+                                    <div className="h-full">
                                         <CodeEditor
                                             value={code}
                                             onChange={setCode}
@@ -384,13 +386,13 @@ export default function EditorPage() {
                             </ResizablePanel>
                             <ResizableHandle />
                             <ResizablePanel defaultSize={30} minSize={15}>
-                                <div className="p-4 h-full">
-                                    <div className="space-y-2 h-full">
+                                <div className="p-2 h-full">
+                                    <div className="h-full">
                                         <Textarea
                                             value={input}
                                             onChange={(e) => setInput(e.target.value)}
                                             placeholder="Enter program input here..."
-                                            className="font-mono bg-background/50 backdrop-blur-sm text-foreground border-border h-full resize-none"
+                                            className="font-mono bg-background/50 backdrop-blur-sm text-foreground border-border h-full resize-none rounded-sm"
                                         />
                                     </div>
                                 </div>
@@ -399,8 +401,10 @@ export default function EditorPage() {
                     </ResizablePanel>
                     <ResizableHandle />
                     <ResizablePanel defaultSize={50} minSize={30}>
-                        <div className="p-4 h-full">
-                            <ExecutionOutput output={output} />
+                        <div className="p-2 h-full">
+                            <div className="h-full">
+                                <ExecutionOutput output={output} className="rounded-sm" />
+                            </div>
                         </div>
                     </ResizablePanel>
                 </ResizablePanelGroup>
@@ -451,6 +455,6 @@ export default function EditorPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </main>
+        </div>
     );
 } 

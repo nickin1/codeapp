@@ -51,9 +51,7 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
     const [showComments, setShowComments] = useState(false);
     const [commentsLoaded, setCommentsLoaded] = useState(false);
 
-    // Pre-load comments
     useEffect(() => {
-        // Small delay to ensure smooth modal opening
         const timer = setTimeout(() => {
             setCommentsLoaded(true);
         }, 300);
@@ -118,13 +116,11 @@ export default function BlogPostModal({ post: initialPost, onClose, onUpdate }: 
                 throw new Error('Failed to update content visibility');
             }
 
-            // Update the local state
             setCurrentPost(prev => ({
                 ...prev,
                 hidden: hide
             }));
 
-            // Call the parent's update function
             onUpdate();
         } catch (error) {
             console.error('Error updating content visibility:', error);

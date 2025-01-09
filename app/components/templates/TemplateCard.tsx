@@ -41,7 +41,6 @@ interface TemplateCardProps {
 export default function TemplateCard({ template, onDelete, onUpdate }: TemplateCardProps) {
     const { user } = useAuth();
     const router = useRouter();
-    console.log('Forked status:', template.forked);
     const [showBlogPosts, setShowBlogPosts] = useState(false);
     const [showCopyTooltip, setShowCopyTooltip] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState(false);

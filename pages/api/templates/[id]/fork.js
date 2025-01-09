@@ -4,14 +4,8 @@ import { authorizeRequest } from '../../../../lib/authorization';
 const prisma = new PrismaClient();
 
 
-// title       String
-// description String?
-// code        String
-// language    String
-// tags        String
-
 export default async function handler(req, res) {
-    const { id } = req.query; // Get the template ID from the URL
+    const { id } = req.query;
 
     if (req.method === 'POST') {
         const { userId, newTitle, newDescription, newCode, newLanguage, newTags } = req.body;
@@ -57,5 +51,3 @@ export default async function handler(req, res) {
         return res.status(405).end(`Method not Allowed`);
     }
 }
-
-// partially adapted from ChatGPT

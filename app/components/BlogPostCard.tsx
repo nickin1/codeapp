@@ -22,8 +22,6 @@ export default function BlogPostCard({ post, user, onVote, onHide, onClick }: Bl
     const score = post.votes.reduce((acc, vote) => acc + vote.type, 0);
     const userVote = user ? post.votes.find(vote => vote.userId === user.id)?.type : 0;
 
-    console.log('User Vote:', userVote);
-    console.log('Vote array:', post.votes);
 
     return (
         <Card className="relative overflow-hidden hover:border-primary/50 transition-colors">

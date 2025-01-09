@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SearchProvider } from '@/app/context/SearchContext';
 
 export const metadata: Metadata = {
-  title: "Scriptorium",
+  title: "App",
   description: "Write, execute, and share code templates",
   icons: {
     icon: [
@@ -22,12 +22,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-white dark:bg-gray-900">
+      <body className="bg-background min-h-screen">
         <SearchProvider>
           <Providers>
-            <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col min-h-screen bg-background">
               <Navbar />
-              {children}
+              <div className="pt-16">
+                {children}
+              </div>
             </div>
           </Providers>
         </SearchProvider>

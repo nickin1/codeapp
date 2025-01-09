@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import UserDropdown from './UserDropdown';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/app/context/AuthContext';
-import { Github } from "lucide-react";
+import { Github, Code2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -22,16 +22,14 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className="border-b bg-background">
+            <nav className="border-b bg-background fixed top-0 left-0 right-0 z-[9999]">
                 <div className="h-16">
                     <div className="mx-auto h-full max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex h-full items-center justify-between">
                             {/* Left side: Logo and Navigation */}
                             <div className="flex items-center space-x-6">
                                 <Link href="/" className="flex items-center">
-                                    <span className="text-xl font-bold">
-                                        Scriptorium
-                                    </span>
+                                    <Code2 className="h-6 w-6" />
                                 </Link>
 
                                 {/* Navigation Links */}

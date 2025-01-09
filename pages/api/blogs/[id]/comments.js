@@ -50,10 +50,7 @@ export default async function handler(req, res) {
             res.status(500).json({ error: "Failed to create comment" });
         }
     }
-    // Handle unsupported methods
     else {
         res.status(405).json({ error: "Method not allowed" });
     }
 }
-
-// used chatGPT for prisma queries

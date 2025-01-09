@@ -60,7 +60,6 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
       setLoading(true);
       const userIdParam = showOwnedOnly && user ? `&userId=${user.id}` : '';
       const endpoint = `/api/templates/search?searchTerm=${encodeURIComponent(debouncedSearchTerm)}&page=${currentPage}&limit=10${userIdParam}${showOwnedOnly ? '&ownedOnly=true' : ''}`;
-      console.log('Fetching templates with endpoint:', endpoint);
 
       const response = await fetch(endpoint);
 
@@ -110,7 +109,7 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1);
   };
 
   const renderPagination = () => {
@@ -152,7 +151,7 @@ export default function Templates({ userOnly = false }: TemplatesProps) {
   };
 
   return (
-    <div className="p-4 space-y-4 bg-background">
+    <div className="p-4 space-y-4">
       <div className="flex items-center gap-4">
         <div className="w-72">
           <SearchBar

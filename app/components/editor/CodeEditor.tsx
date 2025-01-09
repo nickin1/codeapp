@@ -18,7 +18,6 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     const { theme } = useTheme();
 
     useEffect(() => {
-        // Define custom themes
         monaco.editor.defineTheme('custom-light', {
             base: 'vs',
             inherit: true,
@@ -114,8 +113,8 @@ export default function CodeEditor({ value, onChange, language }: CodeEditorProp
     };
 
     return (
-        <Card className="overflow-hidden h-full">
-            <div ref={editorRef} className="h-full" />
+        <Card className="overflow-hidden h-full rounded-sm">
+            <div ref={editorRef} className="h-full rounded-sm" />
         </Card>
     );
 }

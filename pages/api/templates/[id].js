@@ -79,34 +79,28 @@ export default async function handler(req, res) {
         }
     }
     else if (req.method === "DELETE") {
-        console.log(`Attempting to delete template with id: ${id}`);
+
         // Fetch the template first
         const template = await prisma.codeTemplate.findUnique({
             where: { id },
         });
 
         if (!template) {
-            console.log(`Template with id ${id} not found`);
             return res.status(404).json({ error: "Template not found" });
         }
 
-        console.log(`Found template:`, template);
 
         // Authorization check
         const authResult = await authorizeRequest(req, template.authorId, res);
-        console.log(`Authorization result:`, authResult);
         if (!authResult.authorized) {
-            console.log(`Authorization failed for user trying to delete template ${id}`);
             return res.status(403).json({ error: authResult.error });
         }
 
         try {
-            console.log(`Deleting template ${id}...`);
             const deletedTemplate = await prisma.codeTemplate.delete({
                 where: { id }
             });
 
-            console.log(`Successfully deleted template:`, deletedTemplate);
             return res.status(200).json(deletedTemplate);
         } catch (error) {
             console.error(`Error deleting template ${id}:`, error);

@@ -5,23 +5,18 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
-    console.log('Query parameters:', req.query);
-    console.log('ownedOnly value:', req.query.ownedOnly, 'type:', typeof req.query.ownedOnly);
 
     const { searchTerm, page = 1, limit = 10, ownedOnly } = req.query;
     let authorizedUserId = null;
 
     const isOwnedOnlyTrue = ownedOnly === 'true';
-    console.log('isOwnedOnlyTrue:', isOwnedOnlyTrue);
 
     if (isOwnedOnlyTrue) {
-        console.log('Entering ownedOnly block');
         const session = await getServerSession(req, res, authOptions);
         if (!session?.user) {
             return res.status(403).json({ error: "Not authenticated" });
         }
         authorizedUserId = session.user.id;
-        console.log('userId after auth:', authorizedUserId);
     }
 
     if (req.method === 'GET') {
@@ -40,7 +35,6 @@ export default async function handler(req, res) {
                 OR: baseSearchConditions,
                 ...(authorizedUserId && isOwnedOnlyTrue && { authorId: authorizedUserId })
             };
-            console.log('Final where clause:', where);
 
             const templates = await prisma.codeTemplate.findMany({
                 where,
@@ -59,7 +53,6 @@ export default async function handler(req, res) {
 
             const totalTemplates = await prisma.codeTemplate.count({ where });
 
-            console.log('templates:', templates);
             return res.status(200).json({
                 totalTemplates,
                 currentPage: Number(page),
@@ -74,5 +67,3 @@ export default async function handler(req, res) {
         res.status(405).end(`Method Not Allowed`);
     }
 }
-
-// used chatGPT for prisma queries and general outline 

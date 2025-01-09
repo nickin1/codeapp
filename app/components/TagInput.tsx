@@ -18,7 +18,6 @@ export default function TagInput({
     const [inputValue, setInputValue] = useState('');
     const [localTags, setLocalTags] = useState<string[]>(value);
 
-    // Keep local tags in sync with parent value
     useEffect(() => {
         setLocalTags(value);
     }, [value]);

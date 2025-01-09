@@ -34,8 +34,6 @@ export default function BlogPage() {
     const [sortBy, setSortBy] = useState('dateDesc');
     const router = useRouter();
 
-    console.log("DEBUG: Blog page rendered, isCreating:", isCreating);
-
     useEffect(() => {
         const fetchPostFromId = async () => {
             if (!postId) return;
@@ -110,7 +108,6 @@ export default function BlogPage() {
             if (response.ok) {
                 const data = await response.json();
 
-                // Update the posts state with the new vote information
                 setPosts(currentPosts =>
                     currentPosts.map(post => {
                         if (post.id === postId) {

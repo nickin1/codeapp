@@ -3,288 +3,286 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { format } from 'date-fns';
+import SearchBar from '../components/SearchBar';
+import { useDebounce } from '../hooks/useDebounce';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface Report {
+interface User {
     id: string;
-    reason: string;
-    additionalExplanation: string;
-    reporterId: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+    github_url: string | null;
+    isActivated: boolean;
+    isAdmin: boolean;
     createdAt: string;
-}
-
-interface Content {
-    id: string;
-    title?: string;
-    content: string;
-    authorId: string;
-    createdAt: string;
-    hidden: boolean;
-    report?: Report[];
-    reports?: Report[];
-    blogPostId?: string;
+    last_login: string | null;
+    _count: {
+        blogPosts: number;
+        comments: number;
+        templates: number;
+    };
 }
 
 interface PaginationInfo {
     totalItems: number;
-    totalPages: number;
     currentPage: number;
+    totalPages: number;
     pageSize: number;
 }
 
-interface ReportedContentResponse {
-    items: Content[];
-    pagination: PaginationInfo;
-}
-
 export default function AdminPanel() {
-    const [blogPosts, setBlogPosts] = useState<ReportedContentResponse | null>(null);
-    const [comments, setComments] = useState<ReportedContentResponse | null>(null);
-    const [loading, setLoading] = useState({ blogs: true, comments: true });
-    const [error, setError] = useState<{ blogs?: string; comments?: string } | null>(null);
-    const [currentPage, setCurrentPage] = useState({ blogs: 1, comments: 1 });
-    const { user, isLoading: authLoading } = useAuth();
-    const router = useRouter();
+    const { user } = useAuth();
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+    const [sortBy, setSortBy] = useState('createdAt');
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
     useEffect(() => {
-        if (!authLoading) {
-            if (user?.isAdmin) {
-                fetchReportedBlogPosts(currentPage.blogs);
-            } else if (!user) {
-                router.push('/');
-            }
-        }
-    }, [user, authLoading, currentPage.blogs]);
+        fetchUsers();
+    }, [debouncedSearchTerm, currentPage, sortBy]);
 
-    useEffect(() => {
-        if (!authLoading) {
-            if (user?.isAdmin) {
-                fetchReportedComments(currentPage.comments);
-            } else if (!user) {
-                router.push('/');
-            }
-        }
-    }, [user, authLoading, currentPage.comments]);
-
-    if (authLoading) {
-        return <div className="p-4">Loading authentication...</div>;
-    }
-
-    const fetchReportedBlogPosts = async (page = 1) => {
-        setLoading(prev => ({ ...prev, blogs: true }));
+    const fetchUsers = async () => {
+        setLoading(true);
         try {
-            const accessToken = localStorage.getItem('accessToken');
-            const response = await fetch(`/api/admin/blog-reports?page=${page}&limit=10`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                }
+            const params = new URLSearchParams({
+                searchTerm: debouncedSearchTerm,
+                page: currentPage.toString(),
+                limit: '10',
+                sortBy,
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch reported blog posts');
-            }
+            const response = await fetch(`/api/admin/users?${params}`);
+            if (!response.ok) throw new Error('Failed to fetch users');
 
             const data = await response.json();
-            setBlogPosts(data);
-            setError(prev => ({ ...prev, blogs: undefined }));
-        } catch (err) {
-            setError(prev => ({
-                ...prev,
-                blogs: err instanceof Error ? err.message : 'An error occurred'
-            }));
+            setUsers(data.users);
+            setPagination(data.pagination);
+        } catch (error) {
+            console.error('Error fetching users:', error);
         } finally {
-            setLoading(prev => ({ ...prev, blogs: false }));
+            setLoading(false);
         }
     };
 
-    const fetchReportedComments = async (page = 1) => {
-        setLoading(prev => ({ ...prev, comments: true }));
+    const handleUserUpdate = async (userId: string, field: 'isActivated', value: boolean) => {
+        // Optimistically update the UI
+        setUsers(currentUsers =>
+            currentUsers.map(user =>
+                user.id === userId
+                    ? { ...user, [field]: value }
+                    : user
+            )
+        );
+
         try {
-            const accessToken = localStorage.getItem('accessToken');
-            const response = await fetch(`/api/admin/comment-reports?page=${page}&limit=10`, {
+            const response = await fetch('/api/admin/users', {
+                method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch reported comments');
-            }
-
-            const data = await response.json();
-            setComments(data);
-            setError(prev => ({ ...prev, comments: undefined }));
-        } catch (err) {
-            setError(prev => ({
-                ...prev,
-                comments: err instanceof Error ? err.message : 'An error occurred'
-            }));
-        } finally {
-            setLoading(prev => ({ ...prev, comments: false }));
-        }
-    };
-
-    const handleHideContent = async (contentId: string, contentType: string, hide: boolean) => {
-        try {
-            const accessToken = localStorage.getItem('accessToken');
-            const response = await fetch('/api/admin/hide-content', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ contentId, contentType, hide }),
+                body: JSON.stringify({
+                    userId,
+                    [field]: value,
+                }),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to update content visibility');
+                const error = await response.json();
+                // Revert the change if the server request failed
+                setUsers(currentUsers =>
+                    currentUsers.map(user =>
+                        user.id === userId
+                            ? { ...user, [field]: !value }
+                            : user
+                    )
+                );
+                throw new Error(error.error || 'Failed to update user');
             }
-
-            if (contentType === 'blogPost') {
-                fetchReportedBlogPosts(currentPage.blogs);
-            } else if (contentType === 'comment') {
-                fetchReportedComments(currentPage.comments);
-            }
-        } catch (err) {
-            setError(prev => ({
-                ...prev,
-                [contentType === 'blogPost' ? 'blogs' : 'comments']:
-                    err instanceof Error ? err.message : 'An error occurred'
-            }));
+        } catch (error) {
+            console.error('Error updating user:', error);
         }
     };
 
-    const handlePageChange = (contentType: 'blogs' | 'comments', newPage: number) => {
-        setCurrentPage(prev => ({ ...prev, [contentType]: newPage }));
-    };
+    if (loading) {
+        return <div className="min-h-screen bg-card">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>;
+    }
 
-    const PaginationControls = ({
-        pagination,
-        contentType
-    }: {
-        pagination: PaginationInfo;
-        contentType: 'blogs' | 'comments';
-    }) => {
-        return (
-            <div className="flex justify-center items-center space-x-2 mt-4">
-                <button
-                    onClick={() => handlePageChange(contentType, pagination.currentPage - 1)}
-                    disabled={pagination.currentPage <= 1}
-                    className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
-                >
-                    Previous
-                </button>
-                <span className="text-sm">
-                    Page {pagination.currentPage} of {pagination.totalPages}
-                </span>
-                <button
-                    onClick={() => handlePageChange(contentType, pagination.currentPage + 1)}
-                    disabled={pagination.currentPage >= pagination.totalPages}
-                    className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
-                >
-                    Next
-                </button>
-            </div>
-        );
-    };
+    if (!user?.isAdmin) {
+        return <div className="min-h-screen bg-card" />;
+    }
 
     return (
-        <div className="p-4">
-            <h1 className="text-2xl font-bold mb-6">Admin Panel - Reported Content</h1>
+        <div className="min-h-screen bg-card">
+            <div className="container mx-auto py-8 space-y-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <Users className="h-6 w-6" />
+                        User Management
+                    </h1>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Blog Posts Section */}
-                <section className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <h2 className="text-xl font-semibold mb-4">
-                        Blog Posts
-                        <span className="text-sm font-normal ml-2">
-                            (Total: {blogPosts?.pagination.totalItems || 0})
-                        </span>
-                    </h2>
-                    {error?.blogs && (
-                        <div className="text-red-500 mb-4">Error: {error.blogs}</div>
-                    )}
-                    <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-                        {loading.blogs ? (
-                            <div>Loading blog posts...</div>
-                        ) : blogPosts?.items?.length === 0 ? (
-                            <p className="text-gray-500 dark:text-gray-400">No reported blog posts</p>
-                        ) : (
-                            blogPosts?.items?.map((post) => (
-                                <div key={post.id} className="border dark:border-gray-700 p-4 rounded-lg">
-                                    <a
-                                        href={`/blog?postId=${post.id}`}
-                                        className="block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
-                                    >
-                                        <h3 className="font-medium">{post.title}</h3>
-                                    </a>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                        Reports: {post.report?.length || 0}
-                                    </p>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleHideContent(post.id, 'blogPost', !post.hidden)}
-                                            className={`px-3 py-1 rounded ${post.hidden
-                                                ? 'bg-green-500 hover:bg-green-600'
-                                                : 'bg-red-500 hover:bg-red-600'
-                                                } text-white transition-colors`}
-                                        >
-                                            {post.hidden ? 'Unhide' : 'Hide'}
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
+                <div className="flex items-center gap-4">
+                    <div className="w-72">
+                        <SearchBar
+                            value={searchTerm}
+                            onChange={setSearchTerm}
+                            placeholder="Search users..."
+                        />
                     </div>
-                    {blogPosts && <PaginationControls pagination={blogPosts.pagination} contentType="blogs" />}
-                </section>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-48">
+                            <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="createdAt">Join Date</SelectItem>
+                            <SelectItem value="name">Name</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
 
-                {/* Comments Section */}
-                <section className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <h2 className="text-xl font-semibold mb-4">
-                        Comments
-                        <span className="text-sm font-normal ml-2">
-                            (Total: {comments?.pagination.totalItems || 0})
-                        </span>
-                    </h2>
-                    {error?.comments && (
-                        <div className="text-red-500 mb-4">Error: {error.comments}</div>
-                    )}
-                    <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-                        {loading.comments ? (
-                            <div>Loading comments...</div>
-                        ) : comments?.items?.length === 0 ? (
-                            <p className="text-gray-500 dark:text-gray-400">No reported comments</p>
-                        ) : (
-                            comments?.items?.map((comment) => (
-                                <div key={comment.id} className="border dark:border-gray-700 p-4 rounded-lg">
-                                    <a
-                                        href={`/blog?postId=${comment.blogPostId}`}
-                                        className="block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer mb-2"
-                                    >
-                                        <p>{comment.content}</p>
-                                    </a>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                        Reports: {comment.reports?.length || 0}
-                                    </p>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleHideContent(comment.id, 'comment', !comment.hidden)}
-                                            className={`px-3 py-1 rounded ${comment.hidden
-                                                ? 'bg-green-500 hover:bg-green-600'
-                                                : 'bg-red-500 hover:bg-red-600'
-                                                } text-white transition-colors`}
+                <div className="rounded-lg border bg-card">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-muted/50">
+                                <TableHead className="text-muted-foreground w-[300px]">User</TableHead>
+                                <TableHead className="text-muted-foreground w-[100px]">GitHub</TableHead>
+                                <TableHead className="text-muted-foreground w-[100px]">Role</TableHead>
+                                <TableHead className="text-muted-foreground w-[100px]">Activity</TableHead>
+                                <TableHead className="text-muted-foreground w-[180px]">Joined</TableHead>
+                                <TableHead className="text-muted-foreground w-[180px]">Last Login</TableHead>
+                                <TableHead className="text-muted-foreground w-[150px]">Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {users.map((user) => (
+                                <TableRow key={user.id} className="hover:bg-muted/50">
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar>
+                                                <AvatarImage src={user.image || undefined} />
+                                                <AvatarFallback>{user.name?.[0]}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-medium">{user.name}</div>
+                                                <div className="text-sm text-muted-foreground">{user.email}</div>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        {user.github_url ? (
+                                            <a
+                                                href={user.github_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                                            >
+                                                Profile →
+                                            </a>
+                                        ) : (
+                                            <span className="text-muted-foreground text-sm">Not linked</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            className={cn(
+                                                user.isAdmin
+                                                    ? "bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700"
+                                                    : "bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700"
+                                            )}
                                         >
-                                            {comment.hidden ? 'Unhide' : 'Hide'}
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
+                                            {user.isAdmin ? 'Admin' : 'User'}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary" className="text-xs">
+                                            {user._count.blogPosts + user._count.comments + user._count.templates} items
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {format(new Date(user.createdAt), 'MMM d, yyyy HH:mm')}
+                                    </TableCell>
+                                    <TableCell>
+                                        {user.last_login ? (
+                                            format(new Date(user.last_login), 'MMM d, yyyy HH:mm')
+                                        ) : (
+                                            <span className="text-muted-foreground text-sm">Never</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="w-[150px]">
+                                        <div className="flex items-center gap-2 min-w-[120px]">
+                                            <Switch
+                                                checked={user.isActivated}
+                                                onCheckedChange={(checked) =>
+                                                    handleUserUpdate(user.id, 'isActivated', checked)
+                                                }
+                                                disabled={user.isAdmin}
+                                                className={user.isActivated ?
+                                                    "data-[state=checked]:bg-green-500 data-[state=checked]:dark:bg-green-600" :
+                                                    "data-[state=unchecked]:bg-red-500 dark:data-[state=unchecked]:bg-red-600"
+                                                }
+                                            />
+                                            <span className={cn(
+                                                "text-sm min-w-[60px]",
+                                                user.isActivated ?
+                                                    "text-green-600 dark:text-green-400" :
+                                                    "text-red-600 dark:text-red-400"
+                                            )}>
+                                                {user.isActivated ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {pagination && pagination.totalPages > 1 && (
+                    <div className="flex justify-center gap-2 mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                            disabled={currentPage === pagination.totalPages}
+                        >
+                            Next
+                        </Button>
                     </div>
-                    {comments && <PaginationControls pagination={comments.pagination} contentType="comments" />}
-                </section>
+                )}
             </div>
         </div>
     );

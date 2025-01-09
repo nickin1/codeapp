@@ -33,6 +33,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
     const [replyTo, setReplyTo] = useState<string | null>(null);
     const [reportingComment, setReportingComment] = useState<string | null>(null);
     const { user } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchComments = async () => {
         try {
@@ -65,12 +66,15 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
 
     const handleSubmitComment = async (e: React.FormEvent, parentId?: string) => {
         e.preventDefault();
-        if (!user) return;
-
-        const text = parentId ? replyText : commentText;
-        if (!text.trim()) return;
+        if (isSubmitting) return;
 
         try {
+            setIsSubmitting(true);
+            if (!user) return;
+
+            const text = parentId ? replyText : commentText;
+            if (!text.trim()) return;
+
             const response = await fetch(`/api/blogs/${postId}/comments`, {
                 method: 'POST',
                 headers: {
@@ -97,12 +101,13 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
             }
         } catch (error) {
             console.error('Error posting comment:', error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const updateCommentVotes = (comments: Comment[], commentId: string, data: any): Comment[] => {
         return comments.map(comment => {
-            // Check if this is the comment we want to update
             if (comment.id === commentId) {
                 if (data.message === "Vote removed") {
                     return {
@@ -117,7 +122,6 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                 };
             }
 
-            // If this comment has children, recursively update them
             if (comment.children && comment.children.length > 0) {
                 return {
                     ...comment,
@@ -125,7 +129,6 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                 };
             }
 
-            // If no match and no children, return unchanged
             return comment;
         });
     };
@@ -149,7 +152,6 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
             if (response.ok) {
                 const data = await response.json();
 
-                // Update comments using the recursive function
                 setComments(currentComments => updateCommentVotes(currentComments, commentId, data));
             }
         } catch (error) {
@@ -172,13 +174,11 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                 throw new Error('Failed to update content visibility');
             }
 
-            // Update the comments state locally
             setComments(currentComments =>
                 currentComments.map(comment => {
                     if (comment.id === contentId) {
                         return { ...comment, hidden: hide };
                     }
-                    // Check if children exist before recursing
                     if (comment.children && comment.children.length > 0) {
                         return {
                             ...comment,
@@ -193,13 +193,11 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
         }
     };
 
-    // Helper function to update nested comments
     const updateCommentsRecursively = (comments: Comment[], contentId: string, hide: boolean): Comment[] => {
         return comments.map(comment => {
             if (comment.id === contentId) {
                 return { ...comment, hidden: hide };
             }
-            // Check if children exist before recursing
             if (comment.children && comment.children.length > 0) {
                 return {
                     ...comment,
@@ -359,7 +357,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
 
             {user && (
                 <div className="flex-1 p-0.5">
-                    <form onSubmit={(e) => handleSubmitComment(e)} className="space-y-2">
+                    <form onSubmit={handleSubmitComment} className="space-y-2">
                         <Textarea
                             value={commentText}
                             onChange={(e) => setCommentText(e.target.value)}
@@ -371,7 +369,7 @@ export default function CommentSection({ postId, onUpdate }: CommentSectionProps
                                 type="submit"
                                 size="sm"
                                 className="h-8 px-4"
-                                disabled={!commentText.trim()}
+                                disabled={!commentText.trim() || isSubmitting}
                             >
                                 Comment
                             </Button>

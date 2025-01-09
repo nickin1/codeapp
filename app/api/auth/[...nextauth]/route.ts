@@ -1,6 +1,6 @@
-import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth";
+import NextAuth, { DefaultSession, NextAuthOptions, Session, Profile as NextAuthProfile } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
 declare module "next-auth" {
@@ -17,6 +17,11 @@ declare module "next-auth" {
     }
 }
 
+interface GithubProfile extends NextAuthProfile {
+    avatar_url: string;
+    html_url: string;
+}
+
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -26,29 +31,57 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ user, account, profile }) {
-            // Check if user exists
-            const dbUser = await prisma.user.findUnique({
-                where: { email: user.email! }
+        async signIn({ profile, account }) {
+            const githubProfile = profile as GithubProfile;
+
+            const existingAccount = await prisma.account.findFirst({
+                where: {
+                    provider: account?.provider,
+                    providerAccountId: account?.providerAccountId,
+                },
+                include: {
+                    user: true
+                }
             });
 
-            if (dbUser?.isActivated) {
+            if (existingAccount?.user) {
+                await prisma.user.update({
+                    where: { id: existingAccount.user.id },
+                    data: {
+                        name: githubProfile.name ?? existingAccount.user.name,
+                        image: githubProfile.avatar_url ?? existingAccount.user.image,
+                        github_url: githubProfile.html_url ?? existingAccount.user.github_url,
+                        last_login: new Date(),
+                    }
+                });
+
+                if (!existingAccount.user.isActivated) {
+                    return '/?show=activation-pending';
+                }
                 return true;
             }
 
-            // If user doesn't exist, create them as deactivated
-            if (!dbUser) {
-                await prisma.user.create({
-                    data: {
-                        email: user.email!,
-                        name: user.name,
-                        image: user.image,
-                        isActivated: false
-                    }
-                });
+            if (!profile || !account) {
+                return '/?show=activation-pending';
             }
 
-            // Return false with a custom URL parameter
+            const newUser = await prisma.user.create({
+                data: {
+                    name: githubProfile.name ?? "Unknown",
+                    email: githubProfile.email ?? "",
+                    image: githubProfile.avatar_url ?? "",
+                    github_url: githubProfile.html_url ?? "",
+                    last_login: new Date(),
+                    accounts: {
+                        create: {
+                            provider: account.provider,
+                            providerAccountId: account.providerAccountId,
+                            type: account.type,
+                        }
+                    }
+                }
+            });
+
             return '/?show=activation-pending';
         },
         async session({ session, user }) {
@@ -56,6 +89,10 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = user.id;
                 session.user.isAdmin = user.isAdmin ?? false;
                 session.user.isActivated = user.isActivated ?? false;
+
+                if (!user.isActivated) {
+                    return {} as Session;
+                }
             }
             return session;
         }

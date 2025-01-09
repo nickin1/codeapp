@@ -55,7 +55,6 @@ export default function BlogForm({ post, open, onClose, onSubmit }: BlogFormProp
     const [isClosing, setIsClosing] = React.useState(false);
     const { user } = useAuth();
 
-    // Update initial values ref to handle tags array
     const initialValues = React.useRef({
         title: '',
         content: '',
@@ -117,12 +116,11 @@ export default function BlogForm({ post, open, onClose, onSubmit }: BlogFormProp
         setIsClosing(false);
     };
 
-    // Helper function to process markdown content
     const processMarkdown = (text: string) => {
         return text
-            .replace(/^\s+/g, '')  // Remove leading whitespace
-            .replace(/\s+$/g, '')  // Remove trailing whitespace
-            .replace(/\n{3,}/g, '\n\n');  // Replace multiple newlines with double newlines
+            .replace(/^\s+/g, '')
+            .replace(/\s+$/g, '')
+            .replace(/\n{3,}/g, '\n\n');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

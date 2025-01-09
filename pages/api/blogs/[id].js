@@ -13,8 +13,6 @@ export default async function handler(req, res) {
             const session = await getServerSession(req, res, authOptions);
             const userId = session?.user?.id;
 
-            console.log("DEBUG: User ID:", userId);
-
             const blogPost = await prisma.blogPost.findUnique({
                 where: { id },
                 include: {
@@ -92,7 +90,6 @@ export default async function handler(req, res) {
                 comments: filteredComments,
             };
 
-            console.log("DEBUG: Response:", responseBlogPost);
             return res.status(200).json(responseBlogPost);
         } catch (error) {
             console.error("Error occurred when retrieving blog post:", error);
@@ -125,8 +122,6 @@ export default async function handler(req, res) {
                 return res.status(403).json({ error: "This post is hidden, you do not have permission to edit it" });
             }
 
-            console.log("RECEIVED TAGS FROM CLIENT:", tags);
-
             const updatedBlogPost = await prisma.blogPost.update({
                 where: {
                     id
@@ -148,8 +143,6 @@ export default async function handler(req, res) {
                 },
             });
 
-            console.log("DEBUG: Updated blog post:", updatedBlogPost);
-
             return res.status(200).json(updatedBlogPost);
         } catch (error) {
             console.error("Error updating blog post:", error);
@@ -162,7 +155,6 @@ export default async function handler(req, res) {
         }
     }
     else if (req.method === "DELETE") {
-        console.log(`Attempting to delete blog post with id: ${id}`);
         try {
             const blogPost = await prisma.blogPost.findUnique({
                 where: { id },
@@ -172,13 +164,9 @@ export default async function handler(req, res) {
             });
 
             if (!blogPost) {
-                console.log(`Blog post with id ${id} not found`);
                 return res.status(404).json({ error: "Blog post not found" });
             }
 
-            // Log template relationships before deletion
-            console.log(`Templates linked to blog post before deletion:`,
-                blogPost.templates.map(t => t.id));
 
             // Authorization check
             const authResult = await authorizeRequest(req, blogPost.authorId, res);
@@ -196,7 +184,6 @@ export default async function handler(req, res) {
                 }
             });
 
-            console.log(`Successfully deleted blog post:`, deletedBlogPost);
             return res.status(200).json(deletedBlogPost);
         } catch (error) {
             console.error(`Error deleting blog post ${id}:`, error);
@@ -207,5 +194,3 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 }
-
-// used chatGPT for prisma queries and general code structure

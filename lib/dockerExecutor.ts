@@ -20,15 +20,11 @@ export class DockerExecutor {
         input: string = '',
         onOutput?: (type: 'stdout' | 'stderr' | 'status', data: string) => void
     ): Promise<{ stdout: string, stderr: string }> {
-        console.log(`Starting code execution for language: ${language}`);
         const containerId = crypto.randomBytes(16).toString('hex');
-        console.log('Generated container ID:', containerId);
 
         const tempPath = path.join(this.tempDir, containerId);
-        console.log('Created temp path:', tempPath);
 
         const imageName = `scriptorium-${language}:latest`;
-        console.log('Using Docker image:', imageName);
 
         try {
             // Check if image exists
@@ -41,42 +37,31 @@ export class DockerExecutor {
                 throw new Error(`Server error, please try again later.`);
             }
 
-            // Create temp directory for this execution
-            console.log('Creating temp directory...');
             await fs.mkdir(tempPath, { recursive: true });
-            console.log('Temp directory created successfully');
 
-            // Set full permissions on temp directory
             await fs.chmod(tempPath, 0o777);
 
-            // Write code file with special handling for Java
             const filename = language === 'java' ? 'Main.java' : `code.${this.getFileExtension(language)}`;
             const codeFile = path.join(tempPath, filename);
             console.log('Writing code to file:', codeFile);
             await fs.writeFile(codeFile, code);
 
             if (input) {
-                console.log('Writing input file...');
                 const inputFile = path.join(tempPath, 'input.txt');
                 await fs.writeFile(inputFile, input);
-                console.log('Input file written to:', inputFile);
             }
             else {
-                console.log('No input provided, writing empty input file...');
                 const inputFile = path.join(tempPath, 'input.txt');
                 await fs.writeFile(inputFile, '');
-                console.log('Empty input file written to:', inputFile);
             }
 
-            // Create container
-            console.log('Creating Docker container...');
             const container = await this.docker.createContainer({
                 Image: imageName,
                 name: containerId,
                 HostConfig: {
                     Binds: [`${tempPath}:/home/coderunner/code:Z`],
-                    Memory: 512 * 1024 * 1024,
-                    MemorySwap: 512 * 1024 * 1024,
+                    Memory: 256 * 1024 * 1024,
+                    MemorySwap: 256 * 1024 * 1024,
                     CpuPeriod: 100000,
                     CpuQuota: 90000,
                     NetworkMode: 'none',
@@ -95,14 +80,9 @@ export class DockerExecutor {
                 StdinOnce: true,
                 User: 'coderunner'
             });
-            console.log('Container created successfully');
 
-            // Start container
-            console.log('Starting container...');
             await container.start();
-            console.log('Container started successfully');
 
-            // Attach to container
             console.log('Attaching to container...');
             const stream = await container.attach({
                 stream: true,
@@ -112,45 +92,30 @@ export class DockerExecutor {
             });
             console.log('Successfully attached to container');
 
-            // Send input if provided
             if (input) {
-                console.log('Sending input to container...');
-                console.log('Input:', input);
                 stream.write(input + '\n');
-                // stream.end();
-                console.log('Input sent successfully');
             }
 
-            // Collect output
-            console.log('Setting up output collection...');
             let stdout = '';
             let stderr = '';
 
             return new Promise(async (resolve, reject) => {
                 console.log('Starting execution promise...');
 
-                // Set timeout
                 const timeoutId = setTimeout(async () => {
                     console.log('Execution timeout reached');
                     try {
-                        // await container.stop({ t: 0 });  // t: 0 means don't wait
                         await container.kill({ signal: 'SIGTERM' });
-                        // if (onOutput) {
-                        //     onOutput('stderr', 'Execution timeout');
-                        // }
-                        // reject(new Error('Execution timeout'));
                     } catch (error) {
                         console.error('Error killing container:', error);
                     }
                 }, 10000);
 
-                // Buffer to hold incomplete frames
                 let buffer = Buffer.alloc(0);
 
                 stream.on('data', (chunk: Buffer) => {
                     buffer = Buffer.concat([buffer, chunk]);
 
-                    // Process all complete frames in the buffer
                     while (buffer.length >= 8) { // Minimum frame size is 8 bytes (header)
                         const frameHeader = buffer.slice(0, 8);
                         const streamType = frameHeader[0];
@@ -201,7 +166,6 @@ export class DockerExecutor {
                         return;
                     }
 
-                    // Docker exit codes:
                     // 137 = Container killed by OOM killer (128 + SIGKILL(9))
                     // 139 = Segmentation fault (128 + SIGSEGV(11))
                     // 134 = Abort (128 + SIGABRT(6))
@@ -210,7 +174,7 @@ export class DockerExecutor {
 
                     switch (exitCode) {
                         case 137:
-                            terminationReason = `Process terminated: Memory limit exceeded (512MB)`;
+                            terminationReason = `Process terminated: Memory limit exceeded (256MB)`;
                             break;
                         case 124:
                             terminationReason = `Process terminated: Execution timeout (10s)`;

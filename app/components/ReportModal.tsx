@@ -30,7 +30,6 @@ export default function ReportModal({ contentId, contentType, onClose, onSubmit,
 
     const handleClose = () => {
         setIsOpen(false);
-        // Add a small delay to allow the animation to complete
         setTimeout(onClose, 300);
     };
 
@@ -74,7 +73,6 @@ export default function ReportModal({ contentId, contentType, onClose, onSubmit,
         }
     };
 
-    // Update isOpen when the open prop changes
     React.useEffect(() => {
         if (open) {
             setIsOpen(true);

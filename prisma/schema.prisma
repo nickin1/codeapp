@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -14,11 +14,13 @@ model User {
   name          String? // Required for NextAuth
   email         String?   @unique
   emailVerified DateTime?
+  github_url    String?
   image         String? // Required for NextAuth
   isActivated   Boolean   @default(false)
   isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  last_login    DateTime?
 
   // NextAuth relations
   accounts Account[]
@@ -147,5 +149,3 @@ model CommentReport {
   comment               Comment? @relation(fields: [commentId], references: [id])
   createdAt             DateTime @default(now())
 }
-
-// used v0.dev to generate part of schema

@@ -52,5 +52,3 @@ export default async function handler(req, res) {
     }
 }
 
-
-//used chatGPT for prisma queries

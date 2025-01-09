@@ -16,7 +16,6 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    console.log('Incoming request:', { method: req.method, body: req.body });
 
     if (req.method === 'POST') {
         const { title, description, code, language, tags } = req.body as CreateTemplateBody;
@@ -25,12 +24,10 @@ export default async function handler(
         const session = await getServerSession(req, res, authOptions);
 
         if (!session?.user) {
-            console.log('Authorization failed: No session');
             return res.status(403).json({ error: "Not authenticated" });
         }
 
         try {
-            console.log('Attempting to create template in database...');
             const newTemplate = await prisma.codeTemplate.create({
                 data: {
                     title,
@@ -55,7 +52,6 @@ export default async function handler(
                 }
             });
 
-            console.log('Template created successfully:', newTemplate);
             res.status(201).json(newTemplate);
         } catch (error) {
             console.error("Error creating template:", error);
@@ -66,7 +62,6 @@ export default async function handler(
             res.status(500).json({ error: "Failed to create template" });
         }
     } else {
-        console.log('Method not allowed:', req.method);
         res.status(405).end(`Method Not Allowed`);
     }
 } 

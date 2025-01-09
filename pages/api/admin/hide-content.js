@@ -69,5 +69,3 @@ export default async function handler(req, res) {
         res.status(405).end(`Method Not Allowed`);
     }
 }
-
-// partially adapted from chatGPT
