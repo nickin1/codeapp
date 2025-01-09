@@ -46,3 +46,7 @@ next-env.d.ts
 
 # temp
 /temp/
+
+.env.production
+logs/
+pm2/
