@@ -61,8 +61,8 @@ export default function Home() {
                 Hi 👋
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground">
-                This is a platform for running code, saving and sharing templates, and having forum-like discussions.
-                I built it to learn and explore the process of creating a real-world app from the ground up, in terms of both software and hardware.
+                This is a platform for running code, saving code as templates, and having forum-like discussions.
+                Built to learn and explore the process of creating a real-world app from the ground up, in terms of both software and hardware.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -177,7 +177,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold">Community Features</h2>
-                  <p className="text-sm text-muted-foreground">share code and discuss</p>
+                  <p className="text-sm text-muted-foreground">blog about code and discuss</p>
                 </div>
               </div>
               <ul className="space-y-3 text-sm text-muted-foreground pl-4">
@@ -204,7 +204,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold">Infrastructure</h2>
-                  <p className="text-sm text-muted-foreground">self-hosted on my own hardware</p>
+                  <p className="text-sm text-muted-foreground">hosted on my own hardware</p>
                 </div>
               </div>
               <ul className="space-y-3 text-sm text-muted-foreground pl-4">
@@ -233,7 +233,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold">Security & Auth</h2>
-                  <p className="text-sm text-muted-foreground">Enterprise-grade security</p>
+                  <p className="text-sm text-muted-foreground">Secure authentication and access control</p>
                 </div>
               </div>
               <ul className="space-y-3 text-sm text-muted-foreground pl-4">
@@ -243,7 +243,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-start gap-2 min-h-[48px]">
                   <Shield className="h-5 w-5 flex-shrink-0 text-primary mt-0.5" />
-                  <span>Role-based access control with admin dashboard for managing users and content</span>
+                  <span>Role-based access control for certain features, and admin dashboard for managing users and content</span>
                 </li>
                 <li className="flex items-start gap-2 min-h-[48px]">
                   <Users className="h-5 w-5 flex-shrink-0 text-primary mt-0.5" />
