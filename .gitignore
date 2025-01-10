@@ -42,11 +42,11 @@ next-env.d.ts
 
 # environment variables
 .env
-.env.*
+.env.production
+.env.development
 
 # temp
 /temp/
 
-.env.production
 logs/
 pm2/
