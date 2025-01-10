@@ -18,8 +18,12 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
+  optimizeFonts: false,
+  compiler: {
+    removeConsole: false,
+  },
   experimental: {
-    optimizeCss: true
+    optimizeCss: false
   }
 };
 
