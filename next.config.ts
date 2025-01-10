@@ -18,9 +18,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-  experimental: {
-    serverComponentsExternalPackages: ['dockerode']
-  },
+  serverExternalPackages: ['dockerode'],
   transpilePackages: ['monaco-editor'],
   images: {
     unoptimized: true
