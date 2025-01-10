@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   transpilePackages: ['monaco-editor'],
   images: {
     unoptimized: true
+  },
+  experimental: {
+    optimizeCss: true
   }
 };
 
