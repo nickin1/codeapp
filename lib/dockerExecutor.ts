@@ -66,9 +66,9 @@ export class DockerExecutor {
                     CpuQuota: 90000,
                     NetworkMode: 'none',
                     Ulimits: [
-                        { Name: 'nproc', Soft: 500, Hard: 500 },    // Increased process limit
-                        { Name: 'nofile', Soft: 50, Hard: 50 },     // Open files limit
-                        { Name: 'fsize', Soft: 1000000, Hard: 1000000 } // File size limit
+                        { Name: 'nproc', Soft: 1024, Hard: 1024 },    // Increased process limit
+                        { Name: 'nofile', Soft: 1024, Hard: 1024 },   // Increased file limit
+                        { Name: 'fsize', Soft: 1000000, Hard: 1000000 } // Keep file size limit
                     ],
                 },
                 WorkingDir: '/home/coderunner/code',
