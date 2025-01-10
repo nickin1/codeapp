@@ -11,7 +11,15 @@ const nextConfig: NextConfig = {
         })
       );
     }
+
+    if (isServer) {
+      config.externals = [...(config.externals as string[]), 'dockerode']
+    }
+
     return config;
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['dockerode']
   },
   transpilePackages: ['monaco-editor'],
   images: {
