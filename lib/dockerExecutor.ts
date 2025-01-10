@@ -66,7 +66,7 @@ export class DockerExecutor {
                     CpuQuota: 90000,
                     NetworkMode: 'none',
                     Ulimits: [
-                        { Name: 'nproc', Soft: 100, Hard: 100 },    // Process limit
+                        { Name: 'nproc', Soft: 500, Hard: 500 },    // Increased process limit
                         { Name: 'nofile', Soft: 50, Hard: 50 },     // Open files limit
                         { Name: 'fsize', Soft: 1000000, Hard: 1000000 } // File size limit
                     ],
