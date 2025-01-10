@@ -1,7 +1,7 @@
 module.exports = {
     apps: [{
         name: 'scriptorium-prod',
-        script: 'npm',
+        script: './node_modules/.bin/next',
         args: 'start',
         cwd: '/home/nickin/Desktop/scriptorium',
         env: {
