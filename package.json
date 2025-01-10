@@ -9,7 +9,7 @@
     "lint": "next lint",
     "set-admin": "node scripts/setAdmin.js",
     "generate-env": "node scripts/generate-env.js",
-    "prisma:deploy": "dotenv -e .env.production -- prisma migrate deploy",
+    "prisma:deploy": "dotenv -e .env.production -- npx prisma migrate deploy",
     "prisma:studio": "dotenv -e .env.production -- prisma studio"
   },
   "dependencies": {
