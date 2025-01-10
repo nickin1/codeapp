@@ -17,6 +17,7 @@ module.exports = {
         out_file: 'logs/output.log',
         log_date_format: 'YYYY-MM-DD HH:mm:ss',
         merge_logs: true,
-        user: "nickin"
+        user: "nickin",
+        group: "scriptorium-group",
     }]
 } 

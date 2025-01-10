@@ -50,3 +50,5 @@ next-env.d.ts
 
 logs/
 pm2/
+
+ecosystem.config.js
