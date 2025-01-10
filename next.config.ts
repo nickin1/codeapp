@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
