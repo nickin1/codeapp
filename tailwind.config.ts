@@ -3,9 +3,10 @@ import type { Config } from "tailwindcss";
 const config: Config = {
 	darkMode: ['class', 'class'],
 	content: [
+		"./app/**/*.{js,ts,jsx,tsx,mdx}",
 		"./pages/**/*.{js,ts,jsx,tsx,mdx}",
 		"./components/**/*.{js,ts,jsx,tsx,mdx}",
-		"./app/**/*.{js,ts,jsx,tsx,mdx}",
+		"./lib/**/*.{js,ts,jsx,tsx,mdx}"
 	],
 	theme: {
 		extend: {
@@ -119,6 +120,13 @@ const config: Config = {
 		require('@tailwindcss/typography'),
 		require("tailwindcss-animate")
 	],
+	safelist: [
+		'bg-primary',
+		'text-primary',
+		'dark:text-primary',
+		'bg-background',
+		'text-foreground'
+	]
 };
 
 export default config;
