@@ -11,19 +11,11 @@ const nextConfig: NextConfig = {
         })
       );
     }
-
     return config;
   },
   transpilePackages: ['monaco-editor'],
   images: {
     unoptimized: true
-  },
-  optimizeFonts: false,
-  compiler: {
-    removeConsole: false,
-  },
-  experimental: {
-    optimizeCss: false
   }
 };
 
