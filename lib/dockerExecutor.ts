@@ -199,7 +199,21 @@ export class DockerExecutor {
                     }
 
                     try {
-                        await container.remove();
+                        const result = await container.wait();
+
+                        // Get logs before removal
+                        const logs = await container.logs({
+                            stdout: true,
+                            stderr: true,
+                            timestamps: true
+                        });
+
+                        // Log everything
+                        console.log('Exit code:', result.StatusCode);
+                        console.log('Container logs:', logs.toString());
+
+                        // Then remove
+                        await container.remove({ force: true });
                         await fs.rm(tempPath, { recursive: true });
                         resolve({ stdout, stderr });
                     } catch (cleanupError) {
