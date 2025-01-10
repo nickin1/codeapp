@@ -1,13 +1,12 @@
-import type { Config } from "tailwindcss";
-
-const config: Config = {
-	darkMode: ['class', 'class'],
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+	darkMode: ['class'],
 	content: [
 		"./app/**/*.{js,ts,jsx,tsx,mdx}",
 		"./pages/**/*.{js,ts,jsx,tsx,mdx}",
 		"./components/**/*.{js,ts,jsx,tsx,mdx}",
 		"./lib/**/*.{js,ts,jsx,tsx,mdx}",
-		"./@/**/*.{ts,tsx}",
+		"./@/**/*.{ts,tsx}"
 	],
 	theme: {
 		extend: {
@@ -51,48 +50,6 @@ const config: Config = {
 					'3': 'hsl(var(--chart-3))',
 					'4': 'hsl(var(--chart-4))',
 					'5': 'hsl(var(--chart-5))'
-				}
-			},
-			typography: {
-				DEFAULT: {
-					css: {
-						maxWidth: 'none',
-						color: 'inherit',
-						a: {
-							color: '#3182ce',
-							'&:hover': {
-								color: '#2c5282'
-							}
-						},
-						h1: {
-							color: 'inherit',
-							fontWeight: '700'
-						},
-						h2: {
-							color: 'inherit',
-							fontWeight: '600'
-						},
-						h3: {
-							color: 'inherit',
-							fontWeight: '600'
-						},
-						code: {
-							color: 'inherit',
-							padding: '0.2em 0.4em',
-							borderRadius: '0.25rem',
-							backgroundColor: '#f1f1f1'
-						},
-						'code::before': {
-							content: '"'
-						},
-						'code::after': {
-							content: '"'
-						},
-						pre: {
-							backgroundColor: '#1e1e1e',
-							color: '#e5e5e5'
-						}
-					}
 				}
 			},
 			borderRadius: {
@@ -202,5 +159,3 @@ const config: Config = {
 		'lg:px-8'
 	]
 };
-
-export default config;
