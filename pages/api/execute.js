@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     };
 
     try {
-        sendEvent('status', 'started');
+        // sendEvent('status', 'started');
 
         await dockerExecutor.executeCode(
             code,
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
             }
         );
 
-        sendEvent('status', 'completed');
+        // sendEvent('status', 'completed');
     } catch (error) {
         sendEvent('error', error.message);
     } finally {
