@@ -12,7 +12,8 @@ module.exports = {
         out_file: 'logs/output.log',
         log_date_format: 'YYYY-MM-DD HH:mm:ss',
         merge_logs: true,
-        instances: 'max',
-        exec_mode: 'cluster'
+        instances: '6',
+        exec_mode: 'cluster',
+        max_memory_restart: '300M'  // Restart if memory exceeds this
     }]
 } 
