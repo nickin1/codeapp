@@ -7,6 +7,7 @@ module.exports = {
         env: {
             NODE_ENV: 'production',
             PATH: process.env.PATH,
+            PORT: 3000,
             DOCKER_SOCKET: '/var/run/docker.sock'
         },
         instances: 6,
