@@ -67,7 +67,7 @@ export class DockerExecutor {
                     CpuPeriod: 100000,
                     CpuQuota: 90000,
                     NetworkMode: 'none',
-                    PidsLimit: 50,
+                    PidsLimit: 150,
                 },
                 WorkingDir: '/home/coderunner/code',
                 Tty: false,
