@@ -16,9 +16,9 @@ import SearchBar from '@/app/components/SearchBar';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import getCode from 'country-flag-icons/unicode';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
+import 'flag-icons/css/flag-icons.min.css'
 
 interface ExecutionLog {
     id: string;
@@ -80,17 +80,17 @@ export default function ExecutionLogs() {
         }
     };
 
-    const getCountryFlag = (countryName: string) => {
-        if (!countryName || countryName === 'Unknown' || countryName === 'unknown') {
+    const getCountryFlag = (countryCode: string) => {
+        if (!countryCode || countryCode === 'Unknown' || countryCode === 'unknown') {
             return '🌐';
         }
 
-        try {
-            const countryCode = getCode(countryName);
-            return String.fromCodePoint(...[...countryCode].map(c => c.charCodeAt(0) + 127397));
-        } catch (error) {
-            return '🌐';
-        }
+        const codePoints = countryCode
+            .toUpperCase()
+            .split('')
+            .map(char => 127397 + char.charCodeAt(0));
+
+        return String.fromCodePoint(...codePoints);
     };
 
     const handleClearLogs = async () => {
@@ -175,9 +175,11 @@ export default function ExecutionLogs() {
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div className="inline-flex cursor-default">
-                                                    <span className="text-base">
-                                                        {getCountryFlag(log.country)}
-                                                    </span>
+                                                    {log.country && log.country !== 'Unknown' ? (
+                                                        <span className={`fi fi-${log.country.toLowerCase()}`} />
+                                                    ) : (
+                                                        <span>🌐</span>
+                                                    )}
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent side="top">

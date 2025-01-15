@@ -41,6 +41,7 @@
     "country-flag-icons": "^1.5.14",
     "date-fns": "^4.1.0",
     "dockerode": "^4.0.2",
+    "flag-icons": "^7.2.3",
     "framer-motion": "^11.15.0",
     "geoip-lite": "^1.4.10",
     "jsonwebtoken": "^9.0.2",
