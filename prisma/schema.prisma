@@ -9,6 +9,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ExecutionLog {
+  id          String   @id @default(cuid())
+  code        String
+  language    String
+  ipAddress   String
+  country     String   @default("Unknown")
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  memoryUsage Float? // in MB
+  cpuUsage    Float? // percentage
+  execTime    Float? // in seconds
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String? // Required for NextAuth
@@ -32,6 +46,7 @@ model User {
   blogPostReports BlogPostReport[]
   commentReports  CommentReport[]
   votes           UserVote[]
+  ExecutionLog    ExecutionLog[]
 }
 
 model Account {

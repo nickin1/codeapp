@@ -19,12 +19,14 @@ export class DockerExecutor {
         language: string,
         input: string = '',
         onOutput?: (type: 'stdout' | 'stderr' | 'status', data: string) => void
-    ): Promise<{ stdout: string, stderr: string }> {
+    ): Promise<{ stdout: string, stderr: string, stats: { memoryUsage: number, cpuUsage: number, execTime: number } }> {
         const containerId = crypto.randomBytes(16).toString('hex');
 
         const tempPath = path.join(this.tempDir, containerId);
 
         const imageName = `scriptorium-${language}:latest`;
+
+        const startTime = process.hrtime();
 
         try {
             // Check if image exists
@@ -65,7 +67,7 @@ export class DockerExecutor {
                     CpuPeriod: 100000,
                     CpuQuota: 90000,
                     NetworkMode: 'none',
-                    PidsLimit: 150,
+                    PidsLimit: 50,
                 },
                 WorkingDir: '/home/coderunner/code',
                 Tty: false,
@@ -205,7 +207,8 @@ export class DockerExecutor {
                     }
 
                     try {
-                        const result = await container.wait();
+                        const endTime = process.hrtime(startTime);
+                        const execTime = endTime[0] + endTime[1] / 1e9;  // Convert to seconds
 
                         // Get logs before removal
                         const logs = await container.logs({
@@ -217,15 +220,24 @@ export class DockerExecutor {
                         // Log everything
                         console.log('Exit code:', result.StatusCode);
                         console.log('Container logs:', logs.toString());
+                        console.log('Execution time:', execTime.toFixed(3) + 's');
 
                         // Then remove
                         await container.remove({ force: true });
-                        // await container.remove();
                         await fs.rm(tempPath, { recursive: true });
-                        resolve({ stdout, stderr });
+
+                        resolve({
+                            stdout,
+                            stderr,
+                            stats: {
+                                memoryUsage: 0,
+                                cpuUsage: 0,
+                                execTime
+                            }
+                        });
                     } catch (cleanupError) {
                         console.error('Cleanup error:', cleanupError);
-                        resolve({ stdout, stderr });
+                        resolve({ stdout, stderr, stats: { memoryUsage: 0, cpuUsage: 0, execTime: 0 } });
                     }
                 });
             });

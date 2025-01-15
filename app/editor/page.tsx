@@ -412,7 +412,7 @@ export default function EditorPage() {
                         </ResizablePanelGroup>
                     </ResizablePanel>
                     <ResizableHandle />
-                    <ResizablePanel defaultSize={30} minSize={30}>
+                    <ResizablePanel defaultSize={30} minSize={30} maxSize={30}>
                         <div className="p-2 h-full">
                             <div className="h-full">
                                 <ExecutionOutput output={output} className="rounded-sm" />
