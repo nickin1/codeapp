@@ -65,11 +65,7 @@ export class DockerExecutor {
                     CpuPeriod: 100000,
                     CpuQuota: 90000,
                     NetworkMode: 'none',
-                    Ulimits: [
-                        { Name: 'nproc', Soft: 1024, Hard: 1024 },    // Increased process limit
-                        { Name: 'nofile', Soft: 1024, Hard: 1024 },   // Increased file limit
-                        { Name: 'fsize', Soft: 1000000, Hard: 1000000 } // Keep file size limit
-                    ],
+                    PidsLimit: 150,
                 },
                 WorkingDir: '/home/coderunner/code',
                 Tty: false,
@@ -112,6 +108,13 @@ export class DockerExecutor {
                 }, 10000);
 
                 let buffer = Buffer.alloc(0);
+
+                // Add a stream end promise
+                const streamEndPromise = new Promise<void>((resolveStream) => {
+                    stream.on('end', () => {
+                        resolveStream();
+                    });
+                });
 
                 stream.on('data', (chunk: Buffer) => {
                     buffer = Buffer.concat([buffer, chunk]);
@@ -166,6 +169,9 @@ export class DockerExecutor {
                         return;
                     }
 
+                    // Wait for stream to finish before proceeding
+                    await streamEndPromise;
+
                     // 137 = Container killed by OOM killer (128 + SIGKILL(9))
                     // 139 = Segmentation fault (128 + SIGSEGV(11))
                     // 134 = Abort (128 + SIGABRT(6))
@@ -214,6 +220,7 @@ export class DockerExecutor {
 
                         // Then remove
                         await container.remove({ force: true });
+                        // await container.remove();
                         await fs.rm(tempPath, { recursive: true });
                         resolve({ stdout, stderr });
                     } catch (cleanupError) {
