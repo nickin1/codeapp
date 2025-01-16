@@ -20,17 +20,23 @@ export class DockerExecutor {
         input: string = '',
         onOutput?: (type: 'stdout' | 'stderr' | 'status', data: string) => void
     ): Promise<{ stdout: string, stderr: string, stats: { memoryUsage: number, cpuUsage: number, execTime: number } }> {
-        const containerId = crypto.randomBytes(16).toString('hex');
-
-        const tempPath = path.join(this.tempDir, containerId);
-
-        const imageName = `scriptorium-${language}:latest`;
-
-        const startTime = process.hrtime();
+        let stdout = '';
+        let stderr = '';
+        let containerId: string | null = null;
+        const startTime = Date.now();
 
         try {
-            // Check if image exists
-            console.log('Checking if Docker image exists...');
+            // Generate unique container ID
+            containerId = crypto.randomBytes(16).toString('hex');
+            console.log('Generated container ID:', containerId);
+
+            const tempPath = path.join(this.tempDir, containerId);
+            console.log('Created temp path:', tempPath);
+
+            const imageName = `scriptorium-${language}:latest`;
+            console.log('Using Docker image:', imageName);
+
+            // Check if Docker image exists
             try {
                 await this.docker.getImage(imageName).inspect();
                 console.log('Docker image found');
@@ -39,84 +45,77 @@ export class DockerExecutor {
                 throw new Error(`Server error, please try again later.`);
             }
 
+            // Create temp directory for this execution
             await fs.mkdir(tempPath, { recursive: true });
+            console.log('Temp directory created successfully');
 
+            // Set full permissions on temp directory
             await fs.chmod(tempPath, 0o777);
 
+            // Write code file with special handling for Java
             const filename = language === 'java' ? 'Main.java' : `code.${this.getFileExtension(language)}`;
             const codeFile = path.join(tempPath, filename);
             console.log('Writing code to file:', codeFile);
             await fs.writeFile(codeFile, code);
 
-            if (input) {
-                const inputFile = path.join(tempPath, 'input.txt');
-                await fs.writeFile(inputFile, input);
-            }
-            else {
-                const inputFile = path.join(tempPath, 'input.txt');
-                await fs.writeFile(inputFile, '');
-            }
+            // Write input file
+            const inputFile = path.join(tempPath, 'input.txt');
+            await fs.writeFile(inputFile, input || '');
+            console.log(`Input file written to: ${input ? inputFile : 'empty input file'}`);
 
+            // Create container
+            console.log('Creating Docker container...');
             const container = await this.docker.createContainer({
                 Image: imageName,
                 name: containerId,
                 HostConfig: {
                     Binds: [`${tempPath}:/home/coderunner/code:Z`],
-                    Memory: 256 * 1024 * 1024,
-                    MemorySwap: 256 * 1024 * 1024,
+                    Memory: 512 * 1024 * 1024,
+                    MemorySwap: 512 * 1024 * 1024,
                     CpuPeriod: 100000,
                     CpuQuota: 90000,
                     NetworkMode: 'none',
-                    PidsLimit: 150,
+                    PidsLimit: 150
                 },
                 WorkingDir: '/home/coderunner/code',
                 Tty: false,
-                AttachStdin: true,
+                AttachStdin: input ? true : false,
                 AttachStdout: true,
                 AttachStderr: true,
                 OpenStdin: true,
                 StdinOnce: true,
                 User: 'coderunner'
             });
+            console.log('Container created successfully');
 
-            await container.start();
-
-            console.log('Attaching to container...');
+            // Attach to container **before** starting it
+            console.log('Attaching to container before starting...');
             const stream = await container.attach({
                 stream: true,
                 stdout: true,
                 stderr: true,
-                stdin: input ? true : false
+                stdin: input ? true : false,
+                hijack: true // Ensure proper stream handling
             });
             console.log('Successfully attached to container');
 
+            // Start container after attaching
+            await container.start();
+            console.log('Container started successfully');
+
+            // Send input if provided
             if (input) {
+                console.log('Sending input to container...');
                 stream.write(input + '\n');
+                // To avoid closing the entire stream, only end the stdin part
+                // by signaling EOF for stdin without affecting stdout/stderr
+                (stream as any).end(); // `dockerode` uses Duplex streams
+                console.log('Input sent successfully');
             }
 
-            let stdout = '';
-            let stderr = '';
-
-            return new Promise(async (resolve, reject) => {
-                console.log('Starting execution promise...');
-
-                const timeoutId = setTimeout(async () => {
-                    console.log('Execution timeout reached');
-                    try {
-                        await container.kill({ signal: 'SIGTERM' });
-                    } catch (error) {
-                        console.error('Error killing container:', error);
-                    }
-                }, 10000);
-
+            // Handle streaming output
+            const streamPromise = new Promise<void>((resolve, reject) => {
                 let buffer = Buffer.alloc(0);
-
-                // Add a stream end promise
-                const streamEndPromise = new Promise<void>((resolveStream) => {
-                    stream.on('end', () => {
-                        resolveStream();
-                    });
-                });
 
                 stream.on('data', (chunk: Buffer) => {
                     buffer = Buffer.concat([buffer, chunk]);
@@ -126,24 +125,19 @@ export class DockerExecutor {
                         const streamType = frameHeader[0];
                         const frameSize = frameHeader.readUInt32BE(4); // Last 4 bytes contain the size
 
-                        // Check if we have a complete frame
                         if (buffer.length < 8 + frameSize) {
                             break; // Wait for more data
                         }
 
-                        // Extract the frame payload
                         const frameContent = buffer.slice(8, 8 + frameSize).toString('utf8');
-
-                        // Update the buffer to remove the processed frame
                         buffer = buffer.slice(8 + frameSize);
 
-                        // Handle the frame content
-                        if (streamType === 1) {
+                        if (streamType === 1) { // stdout
                             stdout += frameContent;
                             if (onOutput) {
                                 onOutput('stdout', frameContent);
                             }
-                        } else if (streamType === 2) {
+                        } else if (streamType === 2) { // stderr
                             stderr += frameContent;
                             if (onOutput) {
                                 onOutput('stderr', frameContent);
@@ -153,97 +147,93 @@ export class DockerExecutor {
                     }
                 });
 
-                stream.on('error', (error) => {
-                    console.error('Stream error:', error);
-                    if (onOutput) {
-                        onOutput('stderr', error.message);
-                    }
-                    stderr += error.message;
-                });
-
-                container.wait(async (error, result) => {
-                    console.log('Container execution finished, result:', result);
-                    clearTimeout(timeoutId);
-
-                    if (error) {
-                        console.error('Container wait error:', error);
-                        reject(error);
-                        return;
-                    }
-
-                    // Wait for stream to finish before proceeding
-                    await streamEndPromise;
-
-                    // 137 = Container killed by OOM killer (128 + SIGKILL(9))
-                    // 139 = Segmentation fault (128 + SIGSEGV(11))
-                    // 134 = Abort (128 + SIGABRT(6))
-                    const exitCode = result?.StatusCode;
-                    let terminationReason = '';
-
-                    switch (exitCode) {
-                        case 137:
-                            terminationReason = `Process terminated: Memory limit exceeded (256MB)`;
-                            break;
-                        case 124:
-                            terminationReason = `Process terminated: Execution timeout (10s)`;
-                            break;
-                        case 139:
-                            terminationReason = `Process terminated: Segmentation fault`;
-                            break;
-                        case 134:
-                            terminationReason = `Process terminated: Program aborted`;
-                            break;
-                        case 0:
-                            terminationReason = `Process completed successfully`;
-                            break;
-                        default:
-                            terminationReason = `Process terminated with exit code ${exitCode}`;
-                    }
-
-                    console.log(`Container exit code: ${exitCode}, reason: ${terminationReason}`);
-
-                    if (onOutput) {
-                        onOutput('status', terminationReason);
-                    }
-
-                    try {
-                        const endTime = process.hrtime(startTime);
-                        const execTime = endTime[0] + endTime[1] / 1e9;  // Convert to seconds
-
-                        // Get logs before removal
-                        const logs = await container.logs({
-                            stdout: true,
-                            stderr: true,
-                            timestamps: true
-                        });
-
-                        // Log everything
-                        console.log('Exit code:', result.StatusCode);
-                        console.log('Container logs:', logs.toString());
-                        console.log('Execution time:', execTime.toFixed(3) + 's');
-
-                        // Then remove
-                        await container.remove({ force: true });
-                        await fs.rm(tempPath, { recursive: true });
-
-                        resolve({
-                            stdout,
-                            stderr,
-                            stats: {
-                                memoryUsage: 0,
-                                cpuUsage: 0,
-                                execTime
-                            }
-                        });
-                    } catch (cleanupError) {
-                        console.error('Cleanup error:', cleanupError);
-                        resolve({ stdout, stderr, stats: { memoryUsage: 0, cpuUsage: 0, execTime: 0 } });
-                    }
-                });
+                stream.on('end', resolve);
+                stream.on('error', reject);
             });
+
+            // Wait for both the stream to finish and the container to exit
+            const waitPromise = container.wait().then((result) => {
+                console.log('Container execution finished, result:', result);
+                // Handling exit codes
+                const exitCode = result.StatusCode;
+                let terminationReason = '';
+
+                switch (exitCode) {
+                    case 137:
+                        terminationReason = `Process terminated: Memory limit exceeded (512MB)`;
+                        break;
+                    case 124:
+                        terminationReason = `Process terminated: Execution timeout (10s)`;
+                        break;
+                    case 139:
+                        terminationReason = `Process terminated: Segmentation fault`;
+                        break;
+                    case 134:
+                        terminationReason = `Process terminated: Program aborted`;
+                        break;
+                    case 0:
+                        terminationReason = `Process completed successfully`;
+                        break;
+                    default:
+                        terminationReason = `Process terminated with exit code ${exitCode}`;
+                }
+
+                console.log(`Container exit code: ${exitCode}, reason: ${terminationReason}`);
+
+                if (onOutput) {
+                    onOutput('status', terminationReason);
+                }
+
+                return result;
+            });
+
+            await Promise.all([
+                streamPromise,
+                waitPromise
+            ]);
+            console.log('Both stream and container wait have completed');
+
+            // Get container stats
+            const stats = await container.stats({ stream: false });
+            const memoryUsage = stats.memory_stats.usage / (1024 * 1024); // Convert to MB
+            const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage;
+            const systemDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage;
+            const cpuUsage = systemDelta > 0 ? (cpuDelta / systemDelta) * 100 : 0;
+            const execTime = (Date.now() - startTime) / 1000; // Convert to seconds
+
+            console.log('Execution time:', execTime, 'seconds');
+            console.log('Memory usage:', memoryUsage, 'MB');
+            console.log('CPU usage:', cpuUsage, '%');
+
+            return {
+                stdout,
+                stderr,
+                stats: {
+                    memoryUsage,
+                    cpuUsage,
+                    execTime
+                }
+            };
         } catch (error) {
-            console.error('Execution error:', error);
-            return Promise.reject(error)
+            console.error('Error executing code:', error);
+            throw error;
+        } finally {
+            if (containerId) {
+                try {
+                    const container = this.docker.getContainer(containerId);
+                    await container.remove({ force: true });
+                    console.log('Container removed successfully');
+                } catch (error) {
+                    console.error('Error cleaning up container:', error);
+                }
+            }
+            // Cleanup temp directory
+            try {
+                await fs.rm(path.join(this.tempDir, containerId || ''), { recursive: true, force: true });
+                console.log('Temporary directory cleaned up');
+            } catch (cleanupError) {
+                console.error('Error cleaning up temp directory:', cleanupError);
+            }
         }
     }
 
